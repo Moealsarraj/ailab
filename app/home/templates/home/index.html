@@ -2,127 +2,95 @@
 {% block title %}AI Lab — AI Engineering Tools{% endblock %}
 
 {% block content %}
-<div class="flex flex-col h-screen overflow-hidden">
-
-  <!-- Nav: same h-14 pattern as all tools -->
-  <nav class="flex items-center justify-between w-full px-6 py-2 bg-slate-50 h-14 z-50 border-b border-slate-200 shrink-0">
-    <div class="flex items-center gap-3">
-      <span class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-        <span class="material-symbols-outlined text-on-primary text-lg" style="font-variation-settings:'FILL' 1;">biotech</span>
-      </span>
-      <span class="text-lg font-semibold text-on-surface">AI Lab</span>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.al{background:#080c1a;color:#e8eaf6;min-height:100vh;font-family:'DM Sans',sans-serif;display:flex;flex-direction:column;position:relative;overflow-x:hidden}
+.al a{color:inherit;text-decoration:none}
+.al-grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(99,102,241,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,.07) 1px,transparent 1px);background-size:48px 48px}
+.al-glow{position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:700px;height:400px;background:radial-gradient(ellipse,rgba(99,102,241,.18) 0%,transparent 70%);pointer-events:none;z-index:0}
+.al>*:not(.al-grid-bg):not(.al-glow){position:relative;z-index:1}
+.al-nav{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 2rem;background:rgba(8,12,26,.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(99,102,241,.15);position:sticky;top:0;z-index:50}
+.al-logo{display:flex;align-items:center;gap:10px}
+.al-logo-icon{width:26px;height:26px;border-radius:6px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center}
+.al-logo-name{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;letter-spacing:-.02em;color:#fff}
+.al-badge{font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;padding:3px 12px;border-radius:100px;color:#a5b4fc;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.25)}
+.al-hero{padding:7rem 2rem 5rem;max-width:800px;margin:0 auto;width:100%;text-align:center}
+.al-eyebrow{display:inline-flex;align-items:center;gap:8px;margin-bottom:1.5rem;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#a5b4fc;font-weight:500}
+.al-dot{width:4px;height:4px;border-radius:50%;background:#6366f1}
+.al-h1{font-family:'Syne',sans-serif;font-size:clamp(2.4rem,5.5vw,4.2rem);font-weight:800;line-height:1.05;letter-spacing:-.04em;color:#fff;margin-bottom:1.25rem}
+.al-h1 em{font-style:normal;background:linear-gradient(135deg,#818cf8,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.al-sub{font-size:1rem;line-height:1.75;color:#6b7280;max-width:460px;margin:0 auto 2.75rem}
+.al-stats{display:inline-flex;gap:0;border:1px solid rgba(99,102,241,.2);border-radius:8px;overflow:hidden}
+.al-stat{padding:.5rem 1.25rem;font-size:.8rem;color:#9ca3af;border-right:1px solid rgba(99,102,241,.2)}
+.al-stat:last-child{border-right:none}
+.al-stat strong{color:#e8eaf6;font-weight:600;display:block;font-size:.95rem;margin-bottom:1px}
+.al-section{flex:1;padding:4rem 2rem 5rem;border-top:1px solid rgba(99,102,241,.1)}
+.al-section-label{text-align:center;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#374151;margin-bottom:2.5rem;font-weight:500}
+.al-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;max-width:1000px;margin:0 auto}
+.al-card{background:rgba(255,255,255,.03);border:1px solid rgba(99,102,241,.12);border-radius:12px;padding:1.6rem;display:flex;flex-direction:column;gap:14px;transition:border-color .15s,background .15s}
+.al-card:hover{border-color:rgba(99,102,241,.4);background:rgba(99,102,241,.05)}
+.al-card:hover .al-arr{color:#818cf8;transform:translate(2px,-2px)}
+.al-card-top{display:flex;align-items:flex-start;justify-content:space-between}
+.al-icon{width:36px;height:36px;border-radius:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;color:#818cf8}
+.al-arr{color:#374151;font-size:18px;transition:all .12s}
+.al-card-name{font-size:.9rem;font-weight:600;color:#e0e0f0;letter-spacing:-.01em}
+.al-card-desc{font-size:.8rem;line-height:1.65;color:#6b7280}
+.al-footer{border-top:1px solid rgba(99,102,241,.1);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#080c1a}
+.al-status{display:flex;align-items:center;gap:8px;font-size:12px;color:#374151}
+.al-status-dot{width:6px;height:6px;border-radius:50%;background:#6366f1;box-shadow:0 0 6px #6366f1}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.al-hero>*{animation:fadeUp .45s ease both}
+.al-eyebrow{animation-delay:.04s}.al-h1{animation-delay:.1s}.al-sub{animation-delay:.18s}.al-stats{animation-delay:.26s}
+</style>
+<div class="al">
+  <div class="al-grid-bg"></div>
+  <div class="al-glow"></div>
+  <nav class="al-nav">
+    <div class="al-logo">
+      <div class="al-logo-icon"><span class="material-symbols-outlined" style="font-size:14px;color:#fff;font-variation-settings:'FILL' 1">biotech</span></div>
+      <span class="al-logo-name">AI Lab</span>
     </div>
-    <span class="text-xs font-semibold text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-full">4 tools</span>
+    <span class="al-badge">4 tools</span>
   </nav>
-
-  <div class="flex flex-1 overflow-hidden">
-
-    <!-- Sidebar: same w-64 bg-slate-100 pattern as test-forge / agent-builder -->
-    <aside class="flex flex-col h-full w-64 p-4 gap-4 bg-slate-100 border-r border-slate-200 shrink-0 overflow-y-auto">
-      <div>
-        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Categories</p>
-        <div class="space-y-1">
-          <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white shadow-sm text-primary cursor-default">
-            <span class="material-symbols-outlined text-base">speed</span>
-            <span class="text-sm font-medium">Benchmarking</span>
-          </div>
-          <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-slate-200/60 transition-colors cursor-default">
-            <span class="material-symbols-outlined text-base">shield</span>
-            <span class="text-sm font-medium">Security</span>
-          </div>
-          <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-slate-200/60 transition-colors cursor-default">
-            <span class="material-symbols-outlined text-base">smart_toy</span>
-            <span class="text-sm font-medium">Agent Design</span>
-          </div>
-          <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-slate-200/60 transition-colors cursor-default">
-            <span class="material-symbols-outlined text-base">translate</span>
-            <span class="text-sm font-medium">Evaluation</span>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main workspace -->
-    <main class="flex-1 flex flex-col overflow-hidden bg-surface">
-
-      <!-- Action bar: matches the h-14 workspace bars inside tools -->
-      <div class="h-14 flex items-center justify-between px-6 bg-surface-container-low border-b border-slate-200 shrink-0">
-        <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Workspace</span>
-        <span class="text-xs text-outline">No signup required · Free</span>
-      </div>
-
-      <div class="flex-1 overflow-y-auto p-8">
-
-        <!-- Hero -->
-        <div class="mb-8">
-          <span class="text-[11px] font-semibold text-primary uppercase tracking-widest block mb-1">AI Lab</span>
-          <h1 class="text-2xl font-bold text-on-surface tracking-tight">AI Engineering Tools</h1>
-          <p class="text-sm text-on-surface-variant mt-2 max-w-xl leading-relaxed">Build, evaluate, and harden AI systems — benchmark prompts, detect vulnerabilities, design production agents, and score Arabic outputs.</p>
-        </div>
-
-        <!-- Tool cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <a href="/prompt-bench/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
-              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">speed</span>
-              </span>
-              <span class="text-sm font-semibold text-on-surface">Prompt Bench</span>
-              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
-            </div>
-            <div class="p-4">
-              <p class="text-sm text-on-surface-variant leading-relaxed">Benchmark system prompts against test cases and get AI-powered fix recommendations.</p>
-            </div>
-          </a>
-          <a href="/prompt-shield/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
-              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">shield</span>
-              </span>
-              <span class="text-sm font-semibold text-on-surface">Prompt Shield</span>
-              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
-            </div>
-            <div class="p-4">
-              <p class="text-sm text-on-surface-variant leading-relaxed">Detect injection vectors, jailbreak paths, and privilege escalation in system prompts.</p>
-            </div>
-          </a>
-          <a href="/agent-builder/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
-              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">smart_toy</span>
-              </span>
-              <span class="text-sm font-semibold text-on-surface">Agent Builder</span>
-              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
-            </div>
-            <div class="p-4">
-              <p class="text-sm text-on-surface-variant leading-relaxed">Design production-ready AI agents with tools, examples, edge cases, and system prompts.</p>
-            </div>
-          </a>
-          <a href="/arabic-bench/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
-              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">translate</span>
-              </span>
-              <span class="text-sm font-semibold text-on-surface">Arabic Bench</span>
-              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
-            </div>
-            <div class="p-4">
-              <p class="text-sm text-on-surface-variant leading-relaxed">Score Arabic AI responses against reference answers: correctness, grammar, fluency.</p>
-            </div>
-          </a>
-        </div>
-
-      </div>
-    </main>
-  </div>
-
-  <!-- Footer: same h-8 status bar as tools -->
-  <footer class="h-8 bg-surface-container-highest flex items-center justify-between px-6 text-[11px] font-medium text-on-surface-variant border-t border-slate-200 shrink-0">
-    <div class="flex items-center gap-4">
-      <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span>AI Lab</span></div>
+  <div class="al-hero">
+    <div class="al-eyebrow"><span class="al-dot"></span>AI Engineering Suite<span class="al-dot"></span></div>
+    <h1 class="al-h1">Build AI systems<br>that <em>actually work.</em></h1>
+    <p class="al-sub">Benchmark, harden, and ship AI — from prompt evaluation to agent design to Arabic output scoring.</p>
+    <div class="al-stats">
+      <div class="al-stat"><strong>4</strong>tools</div>
+      <div class="al-stat"><strong>Free</strong>always</div>
+      <div class="al-stat"><strong>0</strong>signups</div>
     </div>
-    <span>4 Tools · Free</span>
+  </div>
+  <div class="al-section">
+    <div class="al-section-label">Choose a tool</div>
+    <div class="al-grid">
+      <a class="al-card" href="/prompt-bench/">
+        <div class="al-card-top"><div class="al-icon"><span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1">speed</span></div><span class="al-arr material-symbols-outlined">arrow_outward</span></div>
+        <div class="al-card-name">Prompt Bench</div>
+        <div class="al-card-desc">Benchmark system prompts against test cases and get AI-powered fix recommendations.</div>
+      </a>
+      <a class="al-card" href="/prompt-shield/">
+        <div class="al-card-top"><div class="al-icon"><span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1">shield</span></div><span class="al-arr material-symbols-outlined">arrow_outward</span></div>
+        <div class="al-card-name">Prompt Shield</div>
+        <div class="al-card-desc">Detect injection vectors, jailbreak paths, and privilege escalation in system prompts.</div>
+      </a>
+      <a class="al-card" href="/agent-builder/">
+        <div class="al-card-top"><div class="al-icon"><span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1">smart_toy</span></div><span class="al-arr material-symbols-outlined">arrow_outward</span></div>
+        <div class="al-card-name">Agent Builder</div>
+        <div class="al-card-desc">Design production-ready AI agents with tools, examples, edge cases, and system prompts.</div>
+      </a>
+      <a class="al-card" href="/arabic-bench/">
+        <div class="al-card-top"><div class="al-icon"><span class="material-symbols-outlined" style="font-size:16px;font-variation-settings:'FILL' 1">translate</span></div><span class="al-arr material-symbols-outlined">arrow_outward</span></div>
+        <div class="al-card-name">Arabic Bench</div>
+        <div class="al-card-desc">Score Arabic AI responses against reference answers: correctness, grammar, fluency.</div>
+      </a>
+    </div>
+  </div>
+  <footer class="al-footer">
+    <div class="al-status"><div class="al-status-dot"></div>All systems operational</div>
+    <span style="font-size:12px;color:#374151">Free &middot; No login required</span>
   </footer>
-
 </div>
 {% endblock %}
