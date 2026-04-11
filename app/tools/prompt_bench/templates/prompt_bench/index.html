@@ -1,0 +1,1250 @@
+{% extends "base.html" %}
+{% block title %}Prompt Bench — AI Prompt Evaluator{% endblock %}
+
+{% block content %}
+
+{# ── Toolbar ─────────────────────────────────────────────────────────────── #}
+<header class="toolbar-blur fixed top-0 w-full z-50 flex items-center justify-between px-5 h-12 flex-shrink-0"
+        style="border-bottom: 1px solid rgba(60,60,67,0.10);">
+  <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2" style="letter-spacing:-0.02em;">
+      <span class="material-symbols-outlined text-[17px]" style="color:#007AFF;">experiment</span>
+      <span class="font-semibold text-sys-label text-sm">Prompt Bench</span>
+    </div>
+    {# Tab strip in toolbar #}
+    <div class="flex items-center gap-0.5 ml-2">
+      <button data-tab="prompts" onclick="switchTab('prompts')"
+              class="tab-btn px-3 py-1 rounded-lg text-xs font-medium transition-all"
+              style="background:rgba(0,122,255,0.10); color:#007AFF;">
+        Prompt Editor
+      </button>
+      <button data-tab="cases" onclick="switchTab('cases')"
+              class="tab-btn px-3 py-1 rounded-lg text-xs font-medium transition-all"
+              style="color:#636366;">
+        Test Cases
+      </button>
+      <button data-tab="history" onclick="switchTab('history')"
+              class="tab-btn px-3 py-1 rounded-lg text-xs font-medium transition-all"
+              style="color:#636366;">
+        History
+      </button>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2.5">
+    <span id="run-timestamp" class="section-label hidden"></span>
+    <button onclick="clearAll()" class="btn-secondary text-xs">
+      <span class="material-symbols-outlined text-[14px]">refresh</span>
+      Reset
+    </button>
+    <button id="execute-btn" onclick="executeRun()" class="btn-primary">
+      <span class="material-symbols-outlined text-[15px]">bolt</span>
+      <span id="execute-label">Execute Run</span>
+    </button>
+  </div>
+</header>
+
+{# ── Layout ──────────────────────────────────────────────────────────────── #}
+<div class="flex flex-1 pt-12 overflow-hidden">
+
+  {# ── Left Sidebar ────────────────────────────────────────────────────────── #}
+  <aside class="sidebar-blur fixed left-0 top-12 h-[calc(100vh-48px)] w-56 flex flex-col py-5 px-3 gap-1 z-40 flex-shrink-0"
+         style="border-right: 1px solid rgba(60,60,67,0.10);">
+
+    <div class="px-2 mb-4">
+      <p class="section-label">Navigation</p>
+    </div>
+
+    <button data-nav="prompts" onclick="switchTab('prompts')"
+            class="nav-item active">
+      <span class="material-symbols-outlined text-[16px]">terminal</span>
+      Prompt Editor
+    </button>
+    <button data-nav="cases" onclick="switchTab('cases')"
+            class="nav-item">
+      <span class="material-symbols-outlined text-[16px]">checklist</span>
+      Test Cases
+    </button>
+    <button data-nav="history" onclick="switchTab('history')"
+            class="nav-item">
+      <span class="material-symbols-outlined text-[16px]">history</span>
+      Run History
+      <span id="history-count-badge" class="hidden ml-auto pill text-[9px]"
+            style="background:rgba(0,122,255,0.10); color:#007AFF;"></span>
+    </button>
+
+    <div class="mt-4 px-1">
+      <button onclick="addTestCase()" class="btn-ghost w-full justify-center text-[11px] py-2"
+              style="border: 1px dashed rgba(0,122,255,0.25); border-radius:0.625rem;">
+        <span class="material-symbols-outlined text-[14px]">add</span>
+        Add Test Case
+      </button>
+    </div>
+
+    {# Run stats #}
+    <div id="sidebar-stats" class="hidden mt-5 px-2 pt-4 flex flex-col gap-2.5"
+         style="border-top: 1px solid rgba(60,60,67,0.08);">
+      <p class="section-label mb-1">Last Run</p>
+      <div class="flex justify-between items-center">
+        <span class="text-xs text-sys-label-2">Passed</span>
+        <span id="stat-passed" class="text-xs font-semibold font-mono" style="color:#34C759;">—</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-xs text-sys-label-2">Failed</span>
+        <span id="stat-failed" class="text-xs font-semibold font-mono" style="color:#FF3B30;">—</span>
+      </div>
+      <div class="flex justify-between items-center">
+        <span class="text-xs text-sys-label-2">Warnings</span>
+        <span id="stat-warnings" class="text-xs font-semibold font-mono" style="color:#FF9500;">—</span>
+      </div>
+    </div>
+  </aside>
+
+  {# ── Main Workspace ──────────────────────────────────────────────────────── #}
+  <main class="ml-56 mr-[340px] flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+
+    {# PROMPT EDITOR TAB #}
+    <div id="tab-prompts" class="flex flex-col gap-4">
+
+      <div class="card p-4 flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[15px]" style="color:#007AFF;">psychology</span>
+            <span class="text-xs font-semibold text-sys-label" style="letter-spacing:-0.01em;">System Prompt</span>
+            <span class="pill" style="background:rgba(0,122,255,0.08); color:#007AFF; font-family:'SF Mono',monospace;">SYSTEM ROLE</span>
+          </div>
+          <span class="section-label">⌘↵ to run</span>
+        </div>
+
+        {# Editor chrome #}
+        <div class="rounded-xl overflow-hidden" style="background:#1C1C1E; border:1px solid rgba(255,255,255,0.06);">
+          <div class="flex items-center justify-between px-3.5 py-2"
+               style="background:#2C2C2E; border-bottom:1px solid rgba(255,255,255,0.06);">
+            <span class="text-[10px] font-mono" style="color:#636366;">system_prompt.txt</span>
+            <div class="flex gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full" style="background:#FF5F57;"></span>
+              <span class="w-2.5 h-2.5 rounded-full" style="background:#FFBD2E;"></span>
+              <span class="w-2.5 h-2.5 rounded-full" style="background:#28CA41;"></span>
+            </div>
+          </div>
+          <textarea id="system-prompt"
+            class="w-full h-44 p-4 font-mono text-[13px] leading-relaxed resize-none focus:outline-none focus:ring-0"
+            style="background:#1C1C1E; color:#E5E5EA; caret-color:#007AFF;"
+            placeholder="You are a helpful AI assistant. Your task is to…"></textarea>
+        </div>
+      </div>
+
+      <div class="card p-4" style="background:rgba(0,122,255,0.04); border:1px solid rgba(0,122,255,0.12);">
+        <p class="text-xs text-sys-label-2 leading-relaxed">
+          <span class="font-semibold" style="color:#007AFF;">How to use:</span>
+          Write your system prompt above. Switch to Test Cases to add inputs and expected outputs. Click
+          <span class="font-semibold">Execute Run</span> — the AI evaluates each case and an independent judge scores the output.
+        </p>
+      </div>
+    </div>
+
+    {# TEST CASES TAB #}
+    <div id="tab-cases" class="hidden flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold text-sys-label" style="letter-spacing:-0.01em;">Test Cases</span>
+        <div class="flex items-center gap-2">
+          <button onclick="openBulk()" class="btn-ghost text-xs gap-1" style="color:#636366;">
+            <span class="material-symbols-outlined text-[14px]">content_paste</span>
+            Bulk Import
+          </button>
+          <button onclick="addTestCase()" class="btn-ghost text-xs gap-1">
+            <span class="material-symbols-outlined text-[14px]">add_circle</span>
+            Add Case
+          </button>
+        </div>
+      </div>
+
+      <div class="card overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(60,60,67,0.08); background:rgba(116,116,128,0.04);">
+              <th class="section-label px-4 py-3 w-14">ID</th>
+              <th class="section-label px-4 py-3 w-24">Label</th>
+              <th class="section-label px-4 py-3">User Message</th>
+              <th class="section-label px-4 py-3">Expected Output</th>
+              <th class="section-label px-4 py-3 w-20 text-center">Status</th>
+              <th class="section-label px-4 py-3 w-14 text-center">Score</th>
+              <th class="section-label px-4 py-3 w-10"></th>
+            </tr>
+          </thead>
+          <tbody id="cases-tbody" class="divide-y" style="border-color: rgba(60,60,67,0.06);"></tbody>
+        </table>
+      </div>
+
+      <div id="outputs-section" class="hidden flex flex-col gap-3">
+        <p class="section-label px-0.5">Actual Outputs</p>
+        <div id="outputs-list" class="flex flex-col gap-2"></div>
+      </div>
+    </div>
+
+    {# HISTORY TAB #}
+    <div id="tab-history" class="hidden flex flex-col gap-4">
+
+      {# Header #}
+      <div class="flex items-center justify-between">
+        <span class="text-sm font-semibold text-sys-label" style="letter-spacing:-0.01em;">Run History</span>
+        <button onclick="clearHistory()" class="btn-ghost text-xs gap-1" style="color:#FF3B30;">
+          <span class="material-symbols-outlined text-[14px]">delete_sweep</span>
+          Clear All
+        </button>
+      </div>
+
+      {# Empty state #}
+      <div id="history-empty" class="card p-10 flex flex-col items-center text-center gap-3">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center"
+             style="background:rgba(116,116,128,0.07);">
+          <span class="material-symbols-outlined text-2xl" style="color:#AEAEB2;">history</span>
+        </div>
+        <p class="text-xs font-semibold text-sys-label" style="letter-spacing:-0.01em;">No runs saved yet</p>
+        <p class="text-xs text-sys-label-3">Execute a run to start tracking history</p>
+      </div>
+
+      {# Run list #}
+      <div id="history-list" class="hidden flex flex-col gap-2"></div>
+
+      {# Comparison panel #}
+      <div id="compare-panel" class="hidden flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[15px]" style="color:#007AFF;">compare_arrows</span>
+            <span class="text-xs font-semibold text-sys-label" style="letter-spacing:-0.01em;">Comparing Runs</span>
+          </div>
+          <button onclick="closeCompare()" class="btn-ghost text-xs gap-1 py-1" style="color:#636366;">
+            <span class="material-symbols-outlined text-[14px]">close</span>
+            Close
+          </button>
+        </div>
+
+        {# Score comparison #}
+        <div class="grid grid-cols-2 gap-3">
+          <div class="card p-4 flex flex-col gap-2">
+            <p class="section-label">Selected Run</p>
+            <p id="cmp-old-ts" class="text-[11px] text-sys-label-2 font-mono"></p>
+            <div class="flex gap-3 mt-1">
+              <div class="flex flex-col items-center">
+                <span id="cmp-old-accuracy" class="text-lg font-bold font-mono text-sys-label"></span>
+                <span class="section-label">Accuracy</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span id="cmp-old-consistency" class="text-lg font-bold font-mono text-sys-label"></span>
+                <span class="section-label">Consistency</span>
+              </div>
+            </div>
+          </div>
+          <div class="card p-4 flex flex-col gap-2">
+            <p class="section-label">Latest Run</p>
+            <p id="cmp-new-ts" class="text-[11px] text-sys-label-2 font-mono"></p>
+            <div class="flex gap-3 mt-1">
+              <div class="flex flex-col items-center">
+                <span id="cmp-new-accuracy" class="text-lg font-bold font-mono text-sys-label"></span>
+                <span class="section-label">Accuracy</span>
+              </div>
+              <div class="flex flex-col items-center">
+                <span id="cmp-new-consistency" class="text-lg font-bold font-mono text-sys-label"></span>
+                <span class="section-label">Consistency</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# Per-case delta table #}
+        <div class="card overflow-hidden">
+          <div class="px-4 py-2.5 flex items-center gap-2"
+               style="border-bottom:1px solid rgba(60,60,67,0.07); background:rgba(116,116,128,0.03);">
+            <span class="material-symbols-outlined text-[14px]" style="color:#AEAEB2;">swap_vert</span>
+            <span class="section-label">Per-Case Score Delta</span>
+          </div>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(60,60,67,0.07); background:rgba(116,116,128,0.02);">
+                <th class="section-label px-4 py-2.5">Case</th>
+                <th class="section-label px-4 py-2.5 text-center">Before</th>
+                <th class="section-label px-4 py-2.5 text-center">After</th>
+                <th class="section-label px-4 py-2.5 text-center">Delta</th>
+                <th class="section-label px-4 py-2.5">Status</th>
+              </tr>
+            </thead>
+            <tbody id="compare-tbody" class="divide-y" style="border-color:rgba(60,60,67,0.06);"></tbody>
+          </table>
+        </div>
+
+        {# Prompt diff #}
+        <div class="card overflow-hidden">
+          <button onclick="togglePromptDiff()" class="w-full flex items-center justify-between px-4 py-3 text-left"
+                  style="border-bottom:1px solid rgba(60,60,67,0.07);">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[14px]" style="color:#AEAEB2;">diff</span>
+              <span class="section-label">Prompt Changes</span>
+            </div>
+            <span id="diff-chevron" class="material-symbols-outlined text-[14px]" style="color:#AEAEB2;">expand_more</span>
+          </button>
+          <div id="prompt-diff-body" class="hidden grid grid-cols-2 gap-0">
+            <div class="p-3 flex flex-col gap-1.5" style="border-right:1px solid rgba(60,60,67,0.07);">
+              <p class="section-label mb-1">Before</p>
+              <pre id="diff-old-prompt" class="text-[10px] leading-relaxed whitespace-pre-wrap font-mono"
+                   style="color:#636366; max-height:160px; overflow-y:auto;"></pre>
+            </div>
+            <div class="p-3 flex flex-col gap-1.5">
+              <p class="section-label mb-1">After</p>
+              <pre id="diff-new-prompt" class="text-[10px] leading-relaxed whitespace-pre-wrap font-mono"
+                   style="color:#1C1C1E; max-height:160px; overflow-y:auto;"></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  {# ── Right Sidebar: Results ───────────────────────────────────────────────── #}
+  <aside class="fixed right-0 top-12 h-[calc(100vh-48px)] w-[340px] flex flex-col gap-5 p-5 overflow-y-auto z-40 flex-shrink-0"
+         style="border-left: 1px solid rgba(60,60,67,0.10); background: rgba(255,255,255,0.90); backdrop-filter:blur(20px) saturate(180%); -webkit-backdrop-filter:blur(20px) saturate(180%);">
+
+    {# Run Summary #}
+    <div>
+      <p class="section-label mb-4">Run Summary</p>
+
+      {# Empty #}
+      <div id="summary-empty" class="flex flex-col items-center py-10 text-center">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+             style="background: rgba(116,116,128,0.07);">
+          <span class="material-symbols-outlined text-2xl" style="color:#AEAEB2;">analytics</span>
+        </div>
+        <p class="text-xs font-semibold text-sys-label mb-1" style="letter-spacing:-0.01em;">No runs yet</p>
+        <p class="text-xs text-sys-label-3">Execute a run to see results</p>
+      </div>
+
+      {# Score rings #}
+      <div id="summary-scores" class="hidden grid grid-cols-2 gap-3">
+        <div class="card p-4 flex flex-col items-center gap-2">
+          <div class="relative w-14 h-14 flex items-center justify-center">
+            <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
+              <circle cx="28" cy="28" fill="none" r="24" stroke="rgba(116,116,128,0.12)" stroke-width="4"/>
+              <circle id="ring-consistency" cx="28" cy="28" fill="none" r="24"
+                stroke="#007AFF" stroke-dasharray="151" stroke-dashoffset="151" stroke-width="4"
+                stroke-linecap="round" style="transition: stroke-dashoffset 0.8s ease"/>
+            </svg>
+            <span id="ring-consistency-val" class="text-xs font-semibold font-mono text-sys-label">—</span>
+          </div>
+          <span class="section-label">Consistency</span>
+        </div>
+        <div class="card p-4 flex flex-col items-center gap-2">
+          <div class="relative w-14 h-14 flex items-center justify-center">
+            <svg class="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 56 56">
+              <circle cx="28" cy="28" fill="none" r="24" stroke="rgba(116,116,128,0.12)" stroke-width="4"/>
+              <circle id="ring-accuracy" cx="28" cy="28" fill="none" r="24"
+                stroke="#34C759" stroke-dasharray="151" stroke-dashoffset="151" stroke-width="4"
+                stroke-linecap="round" style="transition: stroke-dashoffset 0.8s ease"/>
+            </svg>
+            <span id="ring-accuracy-val" class="text-xs font-semibold font-mono text-sys-label">—</span>
+          </div>
+          <span class="section-label">Accuracy</span>
+        </div>
+      </div>
+    </div>
+
+    {# Per-case scores #}
+    <div id="scores-section" class="hidden flex flex-col gap-3">
+      <p class="section-label">Per-Case Scores</p>
+      <div id="scores-bars" class="flex flex-col gap-3"></div>
+    </div>
+
+    {# Failed scenarios #}
+    <div id="failed-section" class="hidden flex flex-col gap-2.5">
+      <p class="section-label" style="color:#FF3B30;">Failed Scenarios</p>
+      <div id="failed-list" class="flex flex-col gap-2"></div>
+    </div>
+
+    {# All pass #}
+    <div id="all-pass-state" class="hidden flex flex-col items-center py-6 text-center">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
+           style="background: rgba(52,199,89,0.10);">
+        <span class="material-symbols-outlined text-2xl" style="color:#34C759; font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;">check_circle</span>
+      </div>
+      <p class="text-xs font-semibold" style="color:#34C759; letter-spacing:-0.01em;">All Cases Passed</p>
+    </div>
+
+    {# Recommend Fixes button — shown after a run #}
+    <div id="recommend-btn-wrap" class="hidden pt-1" style="border-top:1px solid rgba(60,60,67,0.08);">
+      <button onclick="getRecommendations()" id="recommend-btn"
+              class="w-full btn-primary justify-center text-xs py-2.5">
+        <span class="material-symbols-outlined text-[15px]">auto_fix_high</span>
+        <span id="recommend-label">Recommend Fixes</span>
+      </button>
+    </div>
+
+    {# Recommendations panel — shown after AI responds #}
+    <div id="recommendations-section" class="hidden flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <p class="section-label">AI Recommendations</p>
+        <button onclick="applyImprovedPrompt()" id="apply-btn"
+                class="hidden btn-ghost text-[11px] gap-1 py-1" style="color:#34C759;">
+          <span class="material-symbols-outlined text-[13px]">check_circle</span>
+          Apply Improved Prompt
+        </button>
+      </div>
+      <div id="recommendations-list" class="flex flex-col gap-2"></div>
+    </div>
+
+  </aside>
+</div>
+
+{# ── Footer ──────────────────────────────────────────────────────────────── #}
+<footer class="toolbar-blur fixed bottom-0 w-full h-9 flex items-center justify-between px-5 z-50 flex-shrink-0"
+        style="border-top: 1px solid rgba(60,60,67,0.10);">
+  <div class="flex items-center gap-4">
+    <span class="section-label">Prompt Bench v1.0</span>
+    <span id="footer-status" class="section-label" style="color:#34C759;">Ready</span>
+  </div>
+  <div id="footer-sync" class="hidden flex items-center gap-1.5">
+    <span class="w-1.5 h-1.5 rounded-full" style="background:#34C759;"></span>
+    <span class="section-label" style="color:#34C759;">Run complete</span>
+  </div>
+</footer>
+
+{# ── Bulk Import Modal ───────────────────────────────────────────────────── #}
+<div id="bulk-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center"
+     style="background: rgba(0,0,0,0.35); backdrop-filter:blur(4px);">
+  <div class="card w-[560px] max-w-[92vw] flex flex-col gap-0 overflow-hidden"
+       style="max-height:80vh;">
+
+    {# Header #}
+    <div class="flex items-center justify-between px-5 py-4"
+         style="border-bottom:1px solid rgba(60,60,67,0.08);">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[16px]" style="color:#007AFF;">content_paste</span>
+        <span class="text-sm font-semibold text-sys-label" style="letter-spacing:-0.01em;">Bulk Import Cases</span>
+      </div>
+      <button onclick="closeBulk()" class="btn-ghost py-1 px-2" style="color:#636366;">
+        <span class="material-symbols-outlined text-[16px]">close</span>
+      </button>
+    </div>
+
+    {# Format hint #}
+    <div class="px-5 py-3" style="background:rgba(0,122,255,0.04); border-bottom:1px solid rgba(0,122,255,0.10);">
+      <p class="text-[11px] text-sys-label-2 leading-relaxed">
+        Paste one case per line — columns separated by <code class="font-mono bg-sys-fill px-1 rounded">|</code>.
+        Format: <code class="font-mono bg-sys-fill px-1 rounded">Label | User Message | Expected Output</code><br/>
+        Also accepts markdown tables (with header row). Existing cases are kept.
+      </p>
+    </div>
+
+    {# Textarea #}
+    <div class="px-5 py-4 flex-1 overflow-y-auto">
+      <textarea id="bulk-input"
+        class="input-apple font-mono text-[12px] leading-relaxed resize-none"
+        style="height:240px;"
+        placeholder="Subject line | Write an email to my manager requesting Friday off | Starts with Subject:, ends with Best regards
+Apology | Write an apology to a client for a missed deadline | Apologizes, professional tone, has Subject: line
+Edge case | asdfghjkl random gibberish | Still produces a structured email"></textarea>
+    </div>
+
+    {# Footer actions #}
+    <div class="flex items-center justify-between px-5 py-3.5"
+         style="border-top:1px solid rgba(60,60,67,0.08); background:rgba(116,116,128,0.03);">
+      <span id="bulk-parse-preview" class="text-xs text-sys-label-3">—</span>
+      <div class="flex items-center gap-2">
+        <button onclick="closeBulk()" class="btn-secondary text-xs">Cancel</button>
+        <button onclick="importBulk()" class="btn-primary text-xs">
+          <span class="material-symbols-outlined text-[14px]">add_circle</span>
+          Import Cases
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const _csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+let _testCases  = [{ id: 'T-001', label: 'Basic Input', user_message: '', expected: '' }];
+let _caseCounter = 2;
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  ['prompts', 'cases', 'history'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+  });
+
+  document.querySelectorAll('.tab-btn').forEach(el => {
+    const active = el.dataset.tab === tab;
+    el.style.background = active ? 'rgba(0,122,255,0.10)' : 'transparent';
+    el.style.color      = active ? '#007AFF' : '#636366';
+    el.style.fontWeight = active ? '600' : '500';
+  });
+
+  document.querySelectorAll('[data-nav]').forEach(el => {
+    const active = el.dataset.nav === tab;
+    el.classList.toggle('active', active);
+  });
+
+  if (tab === 'history') renderHistory();
+}
+
+// ── Test case management ──────────────────────────────────────────────────────
+function addTestCase() {
+  getCaseValues();   // preserve whatever the user has typed first
+  const id = 'T-' + String(_caseCounter).padStart(3, '0');
+  _caseCounter++;
+  _testCases.push({ id, label: '', user_message: '', expected: '' });
+  renderCases();
+  switchTab('cases');
+}
+
+function removeCase(id) {
+  if (_testCases.length <= 1) return;
+  _testCases = _testCases.filter(c => c.id !== id);
+  renderCases();
+}
+
+function getCaseValues() {
+  _testCases.forEach(c => {
+    const row = document.querySelector(`tr[data-id="${c.id}"]`);
+    if (!row) return;
+    c.label        = row.querySelector('.inp-label').value.trim();
+    c.user_message = row.querySelector('.inp-msg').value.trim();
+    c.expected     = row.querySelector('.inp-expected').value.trim();
+  });
+}
+
+function renderCases(results) {
+  const tbody = document.getElementById('cases-tbody');
+  tbody.textContent = '';
+
+  _testCases.forEach(c => {
+    const result = results && results.find(r => r.id === c.id);
+
+    const tr = document.createElement('tr');
+    tr.style.cssText = 'transition: background 0.1s ease;';
+    tr.onmouseenter = () => { tr.style.background = 'rgba(116,116,128,0.04)'; };
+    tr.onmouseleave = () => { tr.style.background = 'transparent'; };
+    tr.dataset.id = c.id;
+
+    // ID
+    const tdId = document.createElement('td');
+    tdId.className = 'px-4 py-3 font-mono text-[10px]';
+    tdId.style.color = '#AEAEB2';
+    tdId.textContent = c.id;
+
+    // Label
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'px-4 py-3';
+    const inpLabel = document.createElement('input');
+    inpLabel.className = 'inp-label input-inline text-xs';
+    inpLabel.placeholder = 'Label…';
+    inpLabel.value = c.label || '';
+    tdLabel.appendChild(inpLabel);
+
+    // User message
+    const tdMsg = document.createElement('td');
+    tdMsg.className = 'px-4 py-3';
+    const inpMsg = document.createElement('textarea');
+    inpMsg.className = 'inp-msg input-inline font-mono text-[11px] resize-none';
+    inpMsg.placeholder = 'User message…';
+    inpMsg.rows = 2;
+    inpMsg.value = c.user_message || '';
+    tdMsg.appendChild(inpMsg);
+
+    // Expected
+    const tdExp = document.createElement('td');
+    tdExp.className = 'px-4 py-3';
+    const inpExp = document.createElement('textarea');
+    inpExp.className = 'inp-expected input-inline text-[11px] resize-none';
+    inpExp.placeholder = 'Expected output…';
+    inpExp.rows = 2;
+    inpExp.value = c.expected || '';
+    tdExp.appendChild(inpExp);
+
+    // Status badge
+    const tdStatus = document.createElement('td');
+    tdStatus.className = 'px-4 py-3 text-center';
+    if (result) {
+      const badge = document.createElement('span');
+      const statusMap = {
+        pass:    { bg: 'rgba(52,199,89,0.10)',  color: '#34C759', label: 'PASS' },
+        fail:    { bg: 'rgba(255,59,48,0.10)',   color: '#FF3B30', label: 'FAIL' },
+        warning: { bg: 'rgba(255,149,0,0.10)',   color: '#FF9500', label: 'WARN' },
+      };
+      const s = statusMap[result.status] || { bg: 'rgba(116,116,128,0.08)', color: '#636366', label: result.status.toUpperCase() };
+      badge.className = 'pill';
+      badge.style.cssText = `background:${s.bg}; color:${s.color};`;
+      badge.textContent = s.label;
+      tdStatus.appendChild(badge);
+    }
+
+    // Score
+    const tdScore = document.createElement('td');
+    tdScore.className = 'px-4 py-3 text-center font-mono text-xs font-semibold';
+    if (result) {
+      tdScore.textContent = result.score.toFixed(1);
+      tdScore.style.color = result.score >= 7 ? '#34C759' : result.score >= 4 ? '#FF9500' : '#FF3B30';
+    }
+
+    // Delete
+    const tdDel = document.createElement('td');
+    tdDel.className = 'px-4 py-3 text-center';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'material-symbols-outlined text-[16px] transition-colors cursor-pointer';
+    delBtn.style.color = '#AEAEB2';
+    delBtn.onmouseenter = () => { delBtn.style.color = '#FF3B30'; };
+    delBtn.onmouseleave = () => { delBtn.style.color = '#AEAEB2'; };
+    delBtn.textContent = 'delete';
+    delBtn.onclick = () => removeCase(c.id);
+    tdDel.appendChild(delBtn);
+
+    tr.append(tdId, tdLabel, tdMsg, tdExp, tdStatus, tdScore, tdDel);
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Execute run ───────────────────────────────────────────────────────────────
+async function executeRun() {
+  const systemPrompt = document.getElementById('system-prompt').value.trim();
+  if (!systemPrompt) {
+    switchTab('prompts');
+    document.getElementById('system-prompt').focus();
+    setFooter('Write a system prompt first.', '#FF3B30');
+    return;
+  }
+
+  getCaseValues();
+  const validCases = _testCases.filter(c => c.user_message);
+  if (!validCases.length) {
+    switchTab('cases');
+    setFooter('Add at least one test case.', '#FF3B30');
+    return;
+  }
+
+  const btn = document.getElementById('execute-btn');
+  btn.disabled = true;
+  document.getElementById('execute-label').textContent = 'Running…';
+  setFooter('Processing ' + validCases.length + ' case(s)…', '#FF9500');
+
+  // Reset right sidebar
+  ['summary-scores','scores-section','failed-section','all-pass-state','outputs-section','sidebar-stats','footer-sync'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById('summary-empty').classList.remove('hidden');
+
+  try {
+    const res = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrf },
+      body: JSON.stringify({ system_prompt: systemPrompt, test_cases: validCases })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Run failed');
+    renderResults(data);
+  } catch (err) {
+    setFooter('Error: ' + err.message, '#FF3B30');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('execute-label').textContent = 'Execute Run';
+  }
+}
+
+function renderResults(data) {
+  const results = data.test_results || [];
+  _lastRunResults = results;
+
+  // Auto-save to history
+  const currentPrompt = document.getElementById('system-prompt').value.trim();
+  saveRun(data, currentPrompt);
+
+  renderCases(results);
+
+  // Score rings
+  setRing('ring-consistency', data.consistency_score || 0, 'ring-consistency-val', 151);
+  setRing('ring-accuracy',    data.accuracy_score    || 0, 'ring-accuracy-val',    151);
+  document.getElementById('summary-empty').classList.add('hidden');
+  document.getElementById('summary-scores').classList.remove('hidden');
+
+  // Sidebar stats
+  document.getElementById('stat-passed').textContent   = data.passed;
+  document.getElementById('stat-failed').textContent   = data.failed;
+  document.getElementById('stat-warnings').textContent = data.warnings;
+  document.getElementById('sidebar-stats').classList.remove('hidden');
+
+  // Per-case score bars
+  const barsContainer = document.getElementById('scores-bars');
+  barsContainer.textContent = '';
+  results.forEach(r => {
+    const pct   = (r.score / 10) * 100;
+    const color = r.score >= 7 ? '#34C759' : r.score >= 4 ? '#FF9500' : '#FF3B30';
+
+    const row = document.createElement('div');
+    row.className = 'flex flex-col gap-1';
+
+    const top = document.createElement('div');
+    top.className = 'flex justify-between';
+
+    const idEl = document.createElement('span');
+    idEl.className = 'text-[11px] text-sys-label-2';
+    idEl.textContent = r.id + (r.label ? ' — ' + r.label : '');
+
+    const scoreEl = document.createElement('span');
+    scoreEl.className = 'text-[11px] font-semibold font-mono';
+    scoreEl.style.color = color;
+    scoreEl.textContent = r.score.toFixed(1) + '/10';
+
+    top.append(idEl, scoreEl);
+
+    const track = document.createElement('div');
+    track.className = 'w-full h-1 rounded-full overflow-hidden';
+    track.style.background = 'rgba(116,116,128,0.10)';
+    const fill = document.createElement('div');
+    fill.className = 'h-full rounded-full transition-all duration-700';
+    fill.style.cssText = `width:${pct}%; background:${color};`;
+    track.appendChild(fill);
+
+    row.append(top, track);
+    barsContainer.appendChild(row);
+  });
+  document.getElementById('scores-section').classList.remove('hidden');
+
+  // Actual outputs
+  const outputsList = document.getElementById('outputs-list');
+  outputsList.textContent = '';
+  results.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'card overflow-hidden';
+
+    const header = document.createElement('div');
+    header.className = 'flex items-center justify-between px-4 py-2.5';
+    header.style.cssText = 'border-bottom:1px solid rgba(60,60,67,0.07);';
+
+    const idSpan = document.createElement('span');
+    idSpan.className = 'text-xs font-semibold font-mono';
+    idSpan.style.color = '#007AFF';
+    idSpan.textContent = r.id + (r.label ? ' — ' + r.label : '');
+
+    const noteSpan = document.createElement('span');
+    noteSpan.className = 'text-[11px] italic text-sys-label-3';
+    noteSpan.textContent = r.notes || '';
+
+    header.append(idSpan, noteSpan);
+
+    const pre = document.createElement('pre');
+    pre.className = 'code-block rounded-none text-[11px]';
+    pre.style.borderRadius = '0';
+    pre.textContent = r.actual_output || '';
+
+    card.append(header, pre);
+    outputsList.appendChild(card);
+  });
+  document.getElementById('outputs-section').classList.remove('hidden');
+  switchTab('cases');
+
+  // Failed scenarios
+  const failedList = document.getElementById('failed-list');
+  failedList.textContent = '';
+  if ((data.failed_scenarios || []).length) {
+    data.failed_scenarios.forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'rounded-xl p-3';
+      card.style.cssText = 'background:rgba(255,59,48,0.06); border:1px solid rgba(255,59,48,0.12);';
+
+      const label = document.createElement('p');
+      label.className = 'text-xs font-semibold font-mono mb-1';
+      label.style.color = '#FF3B30';
+      label.textContent = r.id + (r.label ? ': ' + r.label : '');
+
+      const note = document.createElement('p');
+      note.className = 'text-xs text-sys-label-2 leading-snug';
+      note.textContent = r.notes || 'Output did not meet expected criteria.';
+
+      card.append(label, note);
+      failedList.appendChild(card);
+    });
+    document.getElementById('failed-section').classList.remove('hidden');
+  } else {
+    document.getElementById('all-pass-state').classList.remove('hidden');
+  }
+
+  const ts = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('run-timestamp').textContent = 'Last run ' + ts;
+  document.getElementById('run-timestamp').classList.remove('hidden');
+  document.getElementById('footer-sync').classList.remove('hidden');
+  setFooter('Done — ' + data.total_cases + ' cases evaluated', '#34C759');
+
+  // Show recommend button; reset any previous recommendations
+  document.getElementById('recommend-btn-wrap').classList.remove('hidden');
+  document.getElementById('recommendations-section').classList.add('hidden');
+  document.getElementById('apply-btn').classList.add('hidden');
+  document.getElementById('recommendations-list').textContent = '';
+  _improvedPrompt = '';
+}
+
+function setRing(ringId, value, valId, circumference) {
+  const offset = circumference - (value / 100) * circumference;
+  setTimeout(() => {
+    document.getElementById(ringId).style.strokeDashoffset = offset;
+  }, 100);
+  document.getElementById(valId).textContent = value + '%';
+}
+
+function setFooter(msg, color = '#AEAEB2') {
+  const el = document.getElementById('footer-status');
+  el.textContent = msg;
+  el.style.color = color;
+}
+
+function clearAll() {
+  document.getElementById('system-prompt').value = '';
+  _testCases = [{ id: 'T-001', label: '', user_message: '', expected: '' }];
+  _caseCounter = 2;
+  renderCases();
+  ['summary-scores','scores-section','failed-section','all-pass-state','outputs-section',
+   'sidebar-stats','footer-sync','recommend-btn-wrap','recommendations-section'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+  document.getElementById('summary-empty').classList.remove('hidden');
+  document.getElementById('run-timestamp').classList.add('hidden');
+  _lastRunResults = [];
+  _improvedPrompt = '';
+  setFooter('Ready', '#34C759');
+  switchTab('prompts');
+}
+
+// ── Recommend Fixes ───────────────────────────────────────────────────────────
+let _lastRunResults  = [];
+let _improvedPrompt  = '';
+
+async function getRecommendations() {
+  const systemPrompt = document.getElementById('system-prompt').value.trim();
+  if (!systemPrompt || !_lastRunResults.length) return;
+
+  const btn   = document.getElementById('recommend-btn');
+  const label = document.getElementById('recommend-label');
+  btn.disabled = true;
+  label.textContent = 'Analysing…';
+  setFooter('Getting recommendations…', '#FF9500');
+
+  document.getElementById('recommendations-section').classList.remove('hidden');
+  document.getElementById('apply-btn').classList.add('hidden');
+  const list = document.getElementById('recommendations-list');
+  list.textContent = '';
+
+  // Loading placeholder
+  const loading = document.createElement('div');
+  loading.className = 'flex items-center gap-2 py-3';
+  const dot = document.createElement('span');
+  dot.className = 'w-1.5 h-1.5 rounded-full';
+  dot.style.cssText = 'background:#007AFF; animation:pulse 1.2s ease-in-out infinite;';
+  const txt = document.createElement('span');
+  txt.className = 'text-xs text-sys-label-3';
+  txt.textContent = 'Analysing results…';
+  loading.append(dot, txt);
+  list.appendChild(loading);
+
+  try {
+    const res  = await fetch('/api/recommend-fixes', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrf },
+      body:    JSON.stringify({ system_prompt: systemPrompt, run_results: _lastRunResults }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+
+    list.textContent = '';
+
+    if (data.all_passed) {
+      const msg = document.createElement('p');
+      msg.className = 'text-xs text-sys-label-2 leading-relaxed py-2';
+      msg.textContent = 'All cases passed — no fixes needed. Your prompt looks solid.';
+      list.appendChild(msg);
+      setFooter('No fixes needed', '#34C759');
+    } else {
+      const recs = data.recommendations || [];
+      if (!recs.length) {
+        const msg = document.createElement('p');
+        msg.className = 'text-xs text-sys-label-3 py-2';
+        msg.textContent = 'No specific recommendations returned.';
+        list.appendChild(msg);
+      } else {
+        const severityStyle = {
+          high:   { bg: 'rgba(255,59,48,0.08)',   color: '#FF3B30',  label: 'High'   },
+          medium: { bg: 'rgba(255,149,0,0.08)',    color: '#FF9500',  label: 'Medium' },
+          low:    { bg: 'rgba(116,116,128,0.08)',  color: '#8E8E93',  label: 'Low'    },
+        };
+
+        recs.forEach(rec => {
+          const s = severityStyle[rec.severity] || severityStyle.low;
+
+          const card = document.createElement('div');
+          card.className = 'rounded-xl p-3 flex flex-col gap-1.5';
+          card.style.cssText = `background:${s.bg}; border:1px solid ${s.color}22;`;
+
+          const top = document.createElement('div');
+          top.className = 'flex items-center gap-2';
+
+          const badge = document.createElement('span');
+          badge.className = 'pill';
+          badge.style.cssText = `background:${s.color}18; color:${s.color};`;
+          badge.textContent = s.label;
+
+          const issue = document.createElement('span');
+          issue.className = 'text-[11px] font-semibold text-sys-label leading-snug';
+          issue.textContent = rec.issue || '';
+
+          top.append(badge, issue);
+
+          const fix = document.createElement('p');
+          fix.className = 'text-[11px] text-sys-label-2 leading-snug pl-0.5';
+          fix.textContent = rec.fix || '';
+
+          card.append(top, fix);
+          list.appendChild(card);
+        });
+
+        _improvedPrompt = data.improved_prompt || '';
+        if (_improvedPrompt) {
+          document.getElementById('apply-btn').classList.remove('hidden');
+        }
+      }
+      setFooter(recs.length + ' recommendation(s) ready', '#007AFF');
+    }
+  } catch (err) {
+    list.textContent = '';
+    const msg = document.createElement('p');
+    msg.className = 'text-xs text-sys-label-3 py-2';
+    msg.textContent = 'Error: ' + err.message;
+    list.appendChild(msg);
+    setFooter('Recommendation failed', '#FF3B30');
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Recommend Fixes';
+  }
+}
+
+function applyImprovedPrompt() {
+  if (!_improvedPrompt) return;
+  document.getElementById('system-prompt').value = _improvedPrompt;
+  switchTab('prompts');
+  setFooter('Improved prompt applied — re-run to verify', '#007AFF');
+  document.getElementById('apply-btn').classList.add('hidden');
+}
+
+// ── Bulk Import ───────────────────────────────────────────────────────────────
+function openBulk() {
+  getCaseValues();
+  document.getElementById('bulk-input').value = '';
+  document.getElementById('bulk-parse-preview').textContent = '—';
+  document.getElementById('bulk-modal').classList.remove('hidden');
+  document.getElementById('bulk-input').focus();
+}
+
+function closeBulk() {
+  document.getElementById('bulk-modal').classList.add('hidden');
+}
+
+function parseBulkText(raw) {
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  const cases = [];
+  for (const line of lines) {
+    // Skip markdown separator rows like |---|---|---| or -----|-----
+    if (/^[\|\s\-:\t]+$/.test(line)) continue;
+
+    // Auto-detect delimiter: tab (copied from rendered table) or pipe (markdown source)
+    const delim = line.includes('\t') ? '\t' : '|';
+    let cols = line.split(delim).map(c => c.trim());
+
+    // Strip empty strings at start/end (markdown pipe tables: | col | col |)
+    while (cols.length && cols[0] === '')               cols.shift();
+    while (cols.length && cols[cols.length - 1] === '') cols.pop();
+
+    if (cols.length < 2) continue;
+
+    // Skip header rows (e.g. "Label | User Message | Expected Output")
+    if (/^label$/i.test(cols[0]) && /message/i.test(cols[1])) continue;
+
+    cases.push({
+      label:        cols[0] || '',
+      user_message: cols[1] || '',
+      expected:     cols[2] || '',
+    });
+  }
+  return cases;
+}
+
+document.getElementById('bulk-input').addEventListener('input', function() {
+  const cases = parseBulkText(this.value);
+  const preview = document.getElementById('bulk-parse-preview');
+  if (cases.length === 0) {
+    preview.textContent = 'No valid cases detected';
+    preview.style.color = '#FF3B30';
+  } else {
+    preview.textContent = cases.length + ' case' + (cases.length > 1 ? 's' : '') + ' detected';
+    preview.style.color = '#34C759';
+  }
+});
+
+function importBulk() {
+  const raw    = document.getElementById('bulk-input').value;
+  const parsed = parseBulkText(raw);
+  if (!parsed.length) return;
+
+  parsed.forEach(c => {
+    const id = 'T-' + String(_caseCounter).padStart(3, '0');
+    _caseCounter++;
+    _testCases.push({ id, ...c });
+  });
+
+  closeBulk();
+  renderCases();
+  switchTab('cases');
+  setFooter('Imported ' + parsed.length + ' case(s)', '#34C759');
+}
+
+// Close modal on backdrop click
+document.getElementById('bulk-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeBulk();
+});
+
+// ── Run History ───────────────────────────────────────────────────────────────
+const HISTORY_KEY = 'prompt_bench_history';
+const MAX_HISTORY = 20;
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+  catch { return []; }
+}
+function saveHistory(h) { localStorage.setItem(HISTORY_KEY, JSON.stringify(h)); }
+
+function saveRun(data, systemPrompt) {
+  const h = loadHistory();
+  h.unshift({
+    id: Date.now(), timestamp: new Date().toISOString(),
+    system_prompt: systemPrompt,
+    consistency_score: data.consistency_score, accuracy_score: data.accuracy_score,
+    passed: data.passed, failed: data.failed, warnings: data.warnings,
+    total_cases: data.total_cases, test_results: data.test_results || [],
+  });
+  saveHistory(h.slice(0, MAX_HISTORY));
+  updateHistoryBadge();
+}
+
+function updateHistoryBadge() {
+  const h = loadHistory();
+  const badge = document.getElementById('history-count-badge');
+  if (h.length) { badge.textContent = h.length; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+function fmtTs(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short' }) + ' ' +
+         d.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit' });
+}
+
+function scoreColor(v) {
+  return v >= 7 ? '#34C759' : v >= 4 ? '#FF9500' : '#FF3B30';
+}
+
+function makePill(status) {
+  const sm = {
+    pass:    ['rgba(52,199,89,0.10)',  '#34C759'],
+    fail:    ['rgba(255,59,48,0.10)',  '#FF3B30'],
+    warning: ['rgba(255,149,0,0.10)', '#FF9500'],
+  };
+  const [bg, co] = sm[status] || ['rgba(116,116,128,0.08)', '#8E8E93'];
+  const b = document.createElement('span');
+  b.className = 'pill';
+  b.style.cssText = 'background:' + bg + '; color:' + co + ';';
+  b.textContent = status.toUpperCase();
+  return b;
+}
+
+function renderHistory() {
+  const h = loadHistory();
+  document.getElementById('history-empty').classList.toggle('hidden', h.length > 0);
+  document.getElementById('history-list').classList.toggle('hidden', h.length === 0);
+  document.getElementById('compare-panel').classList.add('hidden');
+
+  const list = document.getElementById('history-list');
+  list.textContent = '';
+
+  h.forEach((run, idx) => {
+    const isLatest = idx === 0;
+    const card = document.createElement('div');
+    card.className = 'card p-4 flex items-center gap-3';
+
+    const num = document.createElement('span');
+    num.className = 'pill flex-shrink-0 font-mono';
+    num.style.cssText = isLatest
+      ? 'background:rgba(0,122,255,0.10); color:#007AFF;'
+      : 'background:rgba(116,116,128,0.08); color:#8E8E93;';
+    num.textContent = isLatest ? 'Latest' : '#' + (h.length - idx);
+
+    const info = document.createElement('div');
+    info.className = 'flex-1 min-w-0 flex flex-col gap-0.5';
+    const ts = document.createElement('p');
+    ts.className = 'text-[11px] font-mono text-sys-label-2';
+    ts.textContent = fmtTs(run.timestamp);
+    const preview = document.createElement('p');
+    preview.className = 'text-[10px] text-sys-label-3 truncate';
+    preview.textContent = run.system_prompt.slice(0, 80);
+    info.append(ts, preview);
+
+    const scores = document.createElement('div');
+    scores.className = 'flex items-center gap-3 flex-shrink-0';
+    [['Acc', run.accuracy_score], ['Con', run.consistency_score]].forEach(([label, val]) => {
+      const s = document.createElement('div');
+      s.className = 'flex flex-col items-center';
+      const v = document.createElement('span');
+      v.className = 'text-sm font-bold font-mono';
+      v.style.color = val >= 70 ? '#34C759' : val >= 40 ? '#FF9500' : '#FF3B30';
+      v.textContent = val + '%';
+      const l = document.createElement('span');
+      l.className = 'section-label';
+      l.textContent = label;
+      s.append(v, l);
+      scores.appendChild(s);
+    });
+
+    const pf = document.createElement('div');
+    pf.className = 'flex flex-col items-center flex-shrink-0';
+    const pfVal = document.createElement('span');
+    pfVal.className = 'text-xs font-semibold font-mono';
+    pfVal.style.color = run.failed > 0 ? '#FF3B30' : '#34C759';
+    pfVal.textContent = run.passed + '/' + run.total_cases;
+    const pfLbl = document.createElement('span');
+    pfLbl.className = 'section-label';
+    pfLbl.textContent = 'Passed';
+    pf.append(pfVal, pfLbl);
+
+    const cmpBtn = document.createElement('button');
+    cmpBtn.className = 'btn-ghost text-[11px] py-1 px-2 flex-shrink-0';
+    if (isLatest) {
+      cmpBtn.style.color = '#AEAEB2';
+      cmpBtn.textContent = 'Latest';
+      cmpBtn.disabled = true;
+    } else {
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined text-[13px]';
+      icon.textContent = 'compare_arrows';
+      const label = document.createTextNode(' Compare');
+      cmpBtn.append(icon, label);
+      cmpBtn.onclick = () => compareRun(idx);
+    }
+
+    card.append(num, info, scores, pf, cmpBtn);
+    list.appendChild(card);
+  });
+}
+
+function compareRun(idx) {
+  const h = loadHistory();
+  const older = h[idx], latest = h[0];
+  if (!older || !latest || older.id === latest.id) return;
+
+  document.getElementById('cmp-old-ts').textContent          = fmtTs(older.timestamp);
+  document.getElementById('cmp-new-ts').textContent          = fmtTs(latest.timestamp);
+  document.getElementById('cmp-old-accuracy').textContent    = older.accuracy_score + '%';
+  document.getElementById('cmp-old-consistency').textContent = older.consistency_score + '%';
+  document.getElementById('cmp-new-accuracy').textContent    = latest.accuracy_score + '%';
+  document.getElementById('cmp-new-consistency').textContent = latest.consistency_score + '%';
+
+  const tbody = document.getElementById('compare-tbody');
+  tbody.textContent = '';
+
+  const oldMap = Object.fromEntries((older.test_results || []).map(r => [r.id, r]));
+  const newMap = Object.fromEntries((latest.test_results || []).map(r => [r.id, r]));
+  const allIds = [...new Set([
+    ...(older.test_results || []).map(r => r.id),
+    ...(latest.test_results || []).map(r => r.id),
+  ])];
+
+  allIds.forEach(id => {
+    const o = oldMap[id], n = newMap[id];
+    const tr = document.createElement('tr');
+
+    const tdLabel = document.createElement('td');
+    tdLabel.className = 'px-4 py-2.5';
+    const idEl = document.createElement('span');
+    idEl.className = 'text-[10px] font-mono block text-sys-label-3';
+    idEl.textContent = id;
+    const nameEl = document.createElement('span');
+    nameEl.className = 'text-xs text-sys-label block';
+    nameEl.textContent = (o || n)?.label || '';
+    tdLabel.append(idEl, nameEl);
+
+    const tdOld = document.createElement('td');
+    tdOld.className = 'px-4 py-2.5 text-center font-mono text-xs font-semibold';
+    tdOld.textContent = o ? o.score.toFixed(1) : '—';
+    tdOld.style.color = o ? scoreColor(o.score) : '#AEAEB2';
+
+    const tdNew = document.createElement('td');
+    tdNew.className = 'px-4 py-2.5 text-center font-mono text-xs font-semibold';
+    tdNew.textContent = n ? n.score.toFixed(1) : '—';
+    tdNew.style.color = n ? scoreColor(n.score) : '#AEAEB2';
+
+    const tdDelta = document.createElement('td');
+    tdDelta.className = 'px-4 py-2.5 text-center font-mono text-xs font-bold';
+    if (o && n) {
+      const delta = n.score - o.score;
+      tdDelta.textContent = (delta > 0 ? '+' : '') + delta.toFixed(1);
+      tdDelta.style.color = delta > 0 ? '#34C759' : delta < 0 ? '#FF3B30' : '#AEAEB2';
+    } else { tdDelta.textContent = '—'; tdDelta.style.color = '#AEAEB2'; }
+
+    const tdStatus = document.createElement('td');
+    tdStatus.className = 'px-4 py-2.5';
+    if (o && n && o.status !== n.status) {
+      const wrap = document.createElement('div');
+      wrap.className = 'flex items-center gap-1';
+      const arrow = document.createElement('span');
+      arrow.className = 'material-symbols-outlined text-[12px]';
+      arrow.style.color = '#AEAEB2';
+      arrow.textContent = 'arrow_forward';
+      wrap.append(makePill(o.status), arrow, makePill(n.status));
+      tdStatus.appendChild(wrap);
+    } else if (n) {
+      tdStatus.appendChild(makePill(n.status));
+    }
+
+    tr.append(tdLabel, tdOld, tdNew, tdDelta, tdStatus);
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('diff-old-prompt').textContent = older.system_prompt;
+  document.getElementById('diff-new-prompt').textContent = latest.system_prompt;
+  document.getElementById('prompt-diff-body').classList.add('hidden');
+  document.getElementById('diff-chevron').textContent = 'expand_more';
+  document.getElementById('compare-panel').classList.remove('hidden');
+  document.getElementById('compare-panel').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function closeCompare() { document.getElementById('compare-panel').classList.add('hidden'); }
+
+function togglePromptDiff() {
+  const body = document.getElementById('prompt-diff-body');
+  const chevron = document.getElementById('diff-chevron');
+  const open = !body.classList.contains('hidden');
+  body.classList.toggle('hidden', open);
+  chevron.textContent = open ? 'expand_more' : 'expand_less';
+}
+
+function clearHistory() {
+  if (!confirm('Clear all run history?')) return;
+  localStorage.removeItem(HISTORY_KEY);
+  updateHistoryBadge();
+  renderHistory();
+}
+
+// Init
+renderCases();
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') executeRun();
+});
+updateHistoryBadge();
+</script>
+{% endblock %}

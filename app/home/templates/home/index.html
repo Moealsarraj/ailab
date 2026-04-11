@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}AI Lab — AI Engineering Tools{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-screen overflow-hidden">
+
+  <!-- Nav: same h-14 pattern as all tools -->
+  <nav class="flex items-center justify-between w-full px-6 py-2 bg-slate-50 h-14 z-50 border-b border-slate-200 shrink-0">
+    <div class="flex items-center gap-3">
+      <span class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+        <span class="material-symbols-outlined text-on-primary text-lg" style="font-variation-settings:'FILL' 1;">biotech</span>
+      </span>
+      <span class="text-lg font-semibold text-on-surface">AI Lab</span>
+    </div>
+    <span class="text-xs font-semibold text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-full">4 tools</span>
+  </nav>
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Sidebar: same w-64 bg-slate-100 pattern as test-forge / agent-builder -->
+    <aside class="flex flex-col h-full w-64 p-4 gap-4 bg-slate-100 border-r border-slate-200 shrink-0 overflow-y-auto">
+      <div>
+        <p class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Categories</p>
+        <div class="space-y-1">
+          <div class="flex items-center gap-3 px-3 py-2 rounded-lg bg-white shadow-sm text-primary cursor-default">
+            <span class="material-symbols-outlined text-base">speed</span>
+            <span class="text-sm font-medium">Benchmarking</span>
+          </div>
+          <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-slate-200/60 transition-colors cursor-default">
+            <span class="material-symbols-outlined text-base">shield</span>
+            <span class="text-sm font-medium">Security</span>
+          </div>
+          <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-slate-200/60 transition-colors cursor-default">
+            <span class="material-symbols-outlined text-base">smart_toy</span>
+            <span class="text-sm font-medium">Agent Design</span>
+          </div>
+          <div class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-slate-200/60 transition-colors cursor-default">
+            <span class="material-symbols-outlined text-base">translate</span>
+            <span class="text-sm font-medium">Evaluation</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main workspace -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-surface">
+
+      <!-- Action bar: matches the h-14 workspace bars inside tools -->
+      <div class="h-14 flex items-center justify-between px-6 bg-surface-container-low border-b border-slate-200 shrink-0">
+        <span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest">Workspace</span>
+        <span class="text-xs text-outline">No signup required · Free</span>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-8">
+
+        <!-- Hero -->
+        <div class="mb-8">
+          <span class="text-[11px] font-semibold text-primary uppercase tracking-widest block mb-1">AI Lab</span>
+          <h1 class="text-2xl font-bold text-on-surface tracking-tight">AI Engineering Tools</h1>
+          <p class="text-sm text-on-surface-variant mt-2 max-w-xl leading-relaxed">Build, evaluate, and harden AI systems — benchmark prompts, detect vulnerabilities, design production agents, and score Arabic outputs.</p>
+        </div>
+
+        <!-- Tool cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <a href="/prompt-bench/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
+              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">speed</span>
+              </span>
+              <span class="text-sm font-semibold text-on-surface">Prompt Bench</span>
+              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
+            </div>
+            <div class="p-4">
+              <p class="text-sm text-on-surface-variant leading-relaxed">Benchmark system prompts against test cases and get AI-powered fix recommendations.</p>
+            </div>
+          </a>
+          <a href="/prompt-shield/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
+              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">shield</span>
+              </span>
+              <span class="text-sm font-semibold text-on-surface">Prompt Shield</span>
+              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
+            </div>
+            <div class="p-4">
+              <p class="text-sm text-on-surface-variant leading-relaxed">Detect injection vectors, jailbreak paths, and privilege escalation in system prompts.</p>
+            </div>
+          </a>
+          <a href="/agent-builder/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
+              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">smart_toy</span>
+              </span>
+              <span class="text-sm font-semibold text-on-surface">Agent Builder</span>
+              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
+            </div>
+            <div class="p-4">
+              <p class="text-sm text-on-surface-variant leading-relaxed">Design production-ready AI agents with tools, examples, edge cases, and system prompts.</p>
+            </div>
+          </a>
+          <a href="/arabic-bench/" class="group block bg-surface-container-lowest rounded-xl overflow-hidden border border-outline-variant/10 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <div class="h-11 flex items-center gap-3 px-4 bg-surface-container-low border-b border-slate-200/70 shrink-0">
+              <span class="w-6 h-6 rounded-md bg-primary flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-on-primary" style="font-size:14px;line-height:1;font-variation-settings:'FILL' 1;">translate</span>
+              </span>
+              <span class="text-sm font-semibold text-on-surface">Arabic Bench</span>
+              <span class="ml-auto flex items-center gap-0.5 text-xs font-medium text-outline group-hover:text-primary transition-colors">Open<span class="material-symbols-outlined text-sm leading-none ml-0.5">arrow_forward</span></span>
+            </div>
+            <div class="p-4">
+              <p class="text-sm text-on-surface-variant leading-relaxed">Score Arabic AI responses against reference answers: correctness, grammar, fluency.</p>
+            </div>
+          </a>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Footer: same h-8 status bar as tools -->
+  <footer class="h-8 bg-surface-container-highest flex items-center justify-between px-6 text-[11px] font-medium text-on-surface-variant border-t border-slate-200 shrink-0">
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-green-500"></div><span>AI Lab</span></div>
+    </div>
+    <span>4 Tools · Free</span>
+  </footer>
+
+</div>
+{% endblock %}

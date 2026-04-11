@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+{% block title %}Agent Builder — AI Agent Definition Generator{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-screen overflow-hidden">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between px-6 w-full sticky top-0 z-50 bg-white border-b border-slate-100 h-14 shrink-0">
+    <span class="text-lg font-semibold text-on-surface tracking-tight">Agent Builder</span>
+  </header>
+
+  <div class="flex flex-1 overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="hidden md:flex flex-col p-4 gap-2 border-r border-slate-100 bg-slate-50 h-full w-64 shrink-0">
+      <div class="flex items-center gap-3 px-2 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-primary">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">smart_toy</span>
+        </div>
+        <div>
+          <h2 class="text-base font-bold text-on-surface leading-none">Agent Builder</h2>
+          <span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-bold">AI-Powered</span>
+        </div>
+      </div>
+      <nav class="space-y-1">
+        <a class="flex items-center gap-3 px-3 py-2 text-blue-700 bg-white shadow-sm rounded-lg text-sm font-medium" href="#">
+          <span class="material-symbols-outlined">dashboard</span>
+          <span>Workspace</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Canvas -->
+    <main class="flex-1 overflow-y-auto bg-surface p-8">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- Left Column: Input -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+          <div>
+            <span class="text-[11px] font-semibold text-primary uppercase tracking-widest block mb-1">Workspace</span>
+            <h1 class="text-2xl font-bold text-on-surface tracking-tight">Agent Configuration</h1>
+          </div>
+
+          <!-- Input Card -->
+          <div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm border border-outline-variant/10 flex flex-col gap-4">
+            <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Describe your agent's purpose and capabilities</label>
+            <textarea id="description-input"
+              class="w-full h-52 bg-surface-container-low border-none rounded-lg p-4 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/50 resize-none"
+              placeholder="e.g., 'A travel agent that finds flights and hotels based on budget and preferred airlines. It should handle multi-city trips and suggest local attractions.'"></textarea>
+            <button id="btn-generate"
+              class="w-full py-3 bg-primary text-on-primary font-semibold rounded-lg shadow-lg hover:bg-primary-dim hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-lg">auto_fix_high</span>
+              <span>Generate Agent Definition</span>
+            </button>
+            <button onclick="loadDemo()" class="flex items-center justify-center gap-1.5 text-sm text-primary font-medium hover:underline transition-colors">
+              <span class="material-symbols-outlined text-base">play_circle</span>Try a demo
+            </button>
+          </div>
+
+          <!-- Tips Card -->
+          <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10">
+            <h3 class="text-sm font-semibold text-on-surface mb-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-lg">tips_and_updates</span>
+              Drafting Tips
+            </h3>
+            <ul class="space-y-3 text-sm text-on-surface-variant">
+              <li class="flex gap-2 items-start">
+                <span class="material-symbols-outlined text-sm text-primary mt-0.5">check_circle</span>
+                Define a specific tone (e.g., formal, concise, helpful).
+              </li>
+              <li class="flex gap-2 items-start">
+                <span class="material-symbols-outlined text-sm text-primary mt-0.5">check_circle</span>
+                Specify output formats (e.g., tables, bullet points, JSON).
+              </li>
+              <li class="flex gap-2 items-start">
+                <span class="material-symbols-outlined text-sm text-primary mt-0.5">check_circle</span>
+                Mention the tools or data sources it should use.
+              </li>
+              <li class="flex gap-2 items-start">
+                <span class="material-symbols-outlined text-sm text-primary mt-0.5">check_circle</span>
+                Describe what the agent should refuse or escalate.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- Right Column: Output -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+          <div class="flex items-center justify-between">
+            <h2 id="agent-name-heading" class="text-lg font-bold text-on-surface tracking-tight">Agent Definition</h2>
+            <button id="btn-copy"
+              class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
+              <span id="copy-icon" class="material-symbols-outlined text-sm">content_copy</span>
+              <span id="copy-label">Copy System Prompt</span>
+            </button>
+          </div>
+
+          <!-- Tab Bar -->
+          <div id="tab-bar" class="flex gap-1 p-1 bg-surface-container-low rounded-xl w-fit">
+            <button class="tab-btn px-4 py-2 bg-white shadow-sm rounded-lg text-sm font-semibold text-primary" data-tab="instructions">Instructions</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-high" data-tab="tools">Tools</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-high" data-tab="examples">Examples</button>
+            <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-high" data-tab="edge-cases">Edge Cases</button>
+          </div>
+
+          <!-- Empty State -->
+          <div id="empty-state" class="flex flex-col items-center justify-center py-24 text-center text-on-surface-variant">
+            <span class="material-symbols-outlined text-5xl text-outline mb-4">smart_toy</span>
+            <p class="text-sm font-medium">Describe your agent and click Generate</p>
+            <p class="text-xs text-outline mt-1">The full definition will appear here</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="loading-state" class="hidden flex flex-col items-center justify-center py-24 gap-4">
+            <div class="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p class="text-sm text-on-surface-variant">Building agent definition…</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="error-state" class="hidden flex flex-col items-center justify-center py-16 text-center">
+            <span class="material-symbols-outlined text-error text-4xl mb-3">error</span>
+            <p id="error-msg" class="text-sm text-error font-medium px-8"></p>
+          </div>
+
+          <!-- Results -->
+          <div id="results" class="hidden flex flex-col gap-6">
+
+            <!-- Instructions Panel: System Prompt -->
+            <div id="panel-instructions">
+              <div class="bg-slate-900 rounded-xl overflow-hidden shadow-xl">
+                <div class="flex items-center justify-between px-4 py-2.5 bg-slate-800 border-b border-slate-700">
+                  <span class="text-xs font-mono text-slate-400">system_prompt.md</span>
+                </div>
+                <pre id="system-prompt-text" class="p-6 font-mono text-sm leading-relaxed editor-bg whitespace-pre-wrap overflow-x-auto no-scrollbar"></pre>
+              </div>
+            </div>
+
+            <!-- Tools Panel -->
+            <div id="panel-tools" class="hidden">
+              <div id="tools-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <!-- Examples Panel -->
+            <div id="panel-examples" class="hidden">
+              <div id="examples-list" class="space-y-6"></div>
+            </div>
+
+            <!-- Edge Cases Panel -->
+            <div id="panel-edge-cases" class="hidden">
+              <div class="bg-red-50 rounded-xl p-6 border border-red-100">
+                <h3 class="text-sm font-semibold text-error mb-6 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-lg">warning</span>
+                  Edge Cases &amp; Handling
+                </h3>
+                <div id="edge-cases-list" class="space-y-4"></div>
+              </div>
+            </div>
+
+          </div><!-- /results -->
+        </section>
+
+      </div><!-- /grid -->
+    </main>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+(function () {
+  const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+
+  const descInput      = document.getElementById('description-input');
+  const btnGenerate    = document.getElementById('btn-generate');
+  const btnCopy        = document.getElementById('btn-copy');
+  const copyIcon       = document.getElementById('copy-icon');
+  const copyLabel      = document.getElementById('copy-label');
+  const agentHeading   = document.getElementById('agent-name-heading');
+
+  const emptyState     = document.getElementById('empty-state');
+  const loadingState   = document.getElementById('loading-state');
+  const errorState     = document.getElementById('error-state');
+  const errorMsg       = document.getElementById('error-msg');
+  const results        = document.getElementById('results');
+
+  const systemPromptEl = document.getElementById('system-prompt-text');
+  const toolsGrid      = document.getElementById('tools-grid');
+  const examplesList   = document.getElementById('examples-list');
+  const edgeCasesList  = document.getElementById('edge-cases-list');
+
+  const panels = {
+    instructions: document.getElementById('panel-instructions'),
+    tools:        document.getElementById('panel-tools'),
+    examples:     document.getElementById('panel-examples'),
+    'edge-cases': document.getElementById('panel-edge-cases'),
+  };
+
+  let currentResult = null;
+  let activeTab = 'instructions';
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      const isActive = btn.dataset.tab === tab;
+      btn.className = isActive
+        ? 'tab-btn px-4 py-2 bg-white shadow-sm rounded-lg text-sm font-semibold text-primary'
+        : 'tab-btn px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-high';
+    });
+    Object.entries(panels).forEach(([key, el]) => {
+      el.classList.toggle('hidden', key !== tab);
+    });
+  }
+
+  // Generate
+  btnGenerate.addEventListener('click', generate);
+
+  async function generate() {
+    const description = descInput.value.trim();
+    if (!description) { descInput.focus(); return; }
+
+    showState('loading');
+
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({ description })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showState('error');
+        errorMsg.textContent = data.error || 'Generation failed — try again.';
+        return;
+      }
+      currentResult = data;
+      renderResult(data);
+      showState('results');
+    } catch (_) {
+      showState('error');
+      errorMsg.textContent = 'Network error — is the server running?';
+    }
+  }
+
+  function renderResult(data) {
+    // Heading
+    agentHeading.textContent = data.agent_name || 'Agent Definition';
+
+    // System prompt
+    systemPromptEl.textContent = data.system_prompt || '';
+
+    // Tools
+    while (toolsGrid.firstChild) toolsGrid.removeChild(toolsGrid.firstChild);
+    (data.tools || []).forEach(tool => {
+      const card = document.createElement('div');
+      card.className = 'p-4 rounded-lg bg-surface-container-low border border-outline-variant/5';
+
+      const header = document.createElement('div');
+      header.className = 'flex items-center gap-3 mb-2';
+
+      const iconEl = document.createElement('span');
+      iconEl.className = 'material-symbols-outlined text-secondary';
+      iconEl.style.fontVariationSettings = "'FILL' 1";
+      iconEl.textContent = tool.icon || 'build';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'font-mono text-sm font-semibold text-on-surface';
+      nameEl.textContent = tool.name || '';
+
+      header.appendChild(iconEl);
+      header.appendChild(nameEl);
+
+      const desc = document.createElement('p');
+      desc.className = 'text-xs text-on-surface-variant';
+      desc.textContent = tool.description || '';
+
+      const params = document.createElement('p');
+      params.className = 'text-[11px] font-mono text-primary mt-2';
+      if (tool.parameters) params.textContent = '(' + tool.parameters + ')';
+
+      card.appendChild(header);
+      card.appendChild(desc);
+      if (tool.parameters) card.appendChild(params);
+      toolsGrid.appendChild(card);
+    });
+
+    // Examples
+    while (examplesList.firstChild) examplesList.removeChild(examplesList.firstChild);
+    (data.examples || []).forEach(ex => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'space-y-3';
+
+      // User message
+      const userRow = document.createElement('div');
+      userRow.className = 'flex flex-col gap-1 max-w-[85%]';
+
+      const userLabel = document.createElement('span');
+      userLabel.className = 'text-[11px] text-on-surface-variant ml-2 font-medium';
+      userLabel.textContent = 'User';
+
+      const userBubble = document.createElement('div');
+      userBubble.className = 'bg-surface-container-low p-3 rounded-2xl rounded-tl-none text-sm text-on-surface';
+      userBubble.textContent = ex.user || '';
+
+      userRow.appendChild(userLabel);
+      userRow.appendChild(userBubble);
+
+      // Agent message
+      const agentRow = document.createElement('div');
+      agentRow.className = 'flex flex-col items-end gap-1 ml-auto max-w-[85%]';
+
+      const agentLabel = document.createElement('span');
+      agentLabel.className = 'text-[11px] text-primary mr-2 font-medium';
+      agentLabel.textContent = data.agent_name || 'Agent';
+
+      const agentBubble = document.createElement('div');
+      agentBubble.className = 'bg-primary text-on-primary p-3 rounded-2xl rounded-tr-none text-sm';
+      agentBubble.textContent = ex.agent || '';
+
+      agentRow.appendChild(agentLabel);
+      agentRow.appendChild(agentBubble);
+
+      wrapper.appendChild(userRow);
+      wrapper.appendChild(agentRow);
+      examplesList.appendChild(wrapper);
+    });
+
+    // Edge Cases
+    while (edgeCasesList.firstChild) edgeCasesList.removeChild(edgeCasesList.firstChild);
+    (data.edge_cases || []).forEach(ec => {
+      const item = document.createElement('div');
+      item.className = 'flex gap-4 items-start';
+
+      const dot = document.createElement('div');
+      dot.className = 'w-2 h-2 rounded-full bg-error mt-1.5 shrink-0';
+
+      const textBlock = document.createElement('div');
+
+      const title = document.createElement('p');
+      title.className = 'text-sm font-semibold text-on-surface';
+      title.textContent = ec.title || '';
+
+      const desc = document.createElement('p');
+      desc.className = 'text-xs text-on-surface-variant mt-0.5 leading-relaxed';
+      desc.textContent = ec.description || '';
+
+      textBlock.appendChild(title);
+      textBlock.appendChild(desc);
+      item.appendChild(dot);
+      item.appendChild(textBlock);
+      edgeCasesList.appendChild(item);
+    });
+
+    // Switch to instructions tab
+    switchTab('instructions');
+  }
+
+  // Copy system prompt
+  btnCopy.addEventListener('click', () => {
+    if (!currentResult || !currentResult.system_prompt) return;
+    navigator.clipboard.writeText(currentResult.system_prompt).then(() => {
+      copyIcon.textContent = 'check';
+      copyLabel.textContent = 'Copied!';
+      setTimeout(() => {
+        copyIcon.textContent = 'content_copy';
+        copyLabel.textContent = 'Copy System Prompt';
+      }, 2000);
+    });
+  });
+
+  function showState(state) {
+    emptyState.classList.add('hidden');
+    loadingState.classList.add('hidden');
+    errorState.classList.add('hidden');
+    results.classList.add('hidden');
+    if (state === 'loading') loadingState.classList.remove('hidden');
+    else if (state === 'error') errorState.classList.remove('hidden');
+    else if (state === 'results') results.classList.remove('hidden');
+    else emptyState.classList.remove('hidden');
+  }
+
+  const _demos = [
+    "A customer support agent for a SaaS product. It answers billing questions, helps users reset passwords, escalates unresolved issues to a human agent, and always maintains a calm, professional tone. It should never make promises about refunds without manager approval.",
+    "A code review bot for Python pull requests. It checks for security vulnerabilities, PEP 8 violations, missing tests, and overly complex functions. It provides line-specific feedback and assigns a severity level (critical / warning / suggestion) to each finding.",
+    "A travel planning concierge that builds personalized itineraries. It considers budget, travel dates, preferred airlines, dietary restrictions, and activity preferences. It handles multi-city trips and suggests local hidden gems beyond tourist attractions."
+  ];
+  let _demoIdx = 0;
+
+  function loadDemo() {
+    descInput.value = _demos[_demoIdx % _demos.length];
+    _demoIdx++;
+    showState('empty');
+    currentResult = null;
+  }
+  window.loadDemo = loadDemo;
+})();
+</script>
+{% endblock %}

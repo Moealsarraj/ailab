@@ -1,0 +1,6 @@
+flask>=3.0
+flask-wtf>=1.2
+python-dotenv>=1.0
+requests>=2.31
+gunicorn>=21.2
+pypdf>=4.0

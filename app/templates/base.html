@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}Competitive Intel{% endblock %}</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "error-container":            "#fe8983",
+        "on-primary-fixed-variant":   "#005bb0",
+        "on-secondary-fixed-variant": "#505d68",
+        "surface-bright":             "#f8f9fa",
+        "surface":                    "#f8f9fa",
+        "surface-tint":               "#005db5",
+        "primary":                    "#005db5",
+        "on-surface-variant":         "#586064",
+        "primary-fixed-dim":          "#bfd5ff",
+        "inverse-surface":            "#0c0f10",
+        "on-tertiary":                "#fbf7ff",
+        "background":                 "#f8f9fa",
+        "secondary":                  "#54616b",
+        "on-secondary-fixed":         "#34414b",
+        "on-background":              "#2b3437",
+        "surface-container":          "#eaeff1",
+        "tertiary-dim":               "#51516c",
+        "on-primary":                 "#f6f7ff",
+        "secondary-container":        "#d7e4f1",
+        "tertiary":                   "#5d5c78",
+        "primary-dim":                "#0052a0",
+        "on-error":                   "#fff7f6",
+        "surface-container-lowest":   "#ffffff",
+        "outline-variant":            "#abb3b7",
+        "on-secondary":               "#f5f9ff",
+        "inverse-primary":            "#5f9efb",
+        "tertiary-fixed-dim":         "#cbc9e9",
+        "outline":                    "#737c7f",
+        "on-secondary-container":     "#46535e",
+        "primary-container":          "#d6e3ff",
+        "error-dim":                  "#4e0309",
+        "error":                      "#9f403d",
+        "secondary-fixed":            "#d7e4f1",
+        "primary-fixed":              "#d6e3ff",
+        "inverse-on-surface":         "#9b9d9e",
+        "on-tertiary-container":      "#4a4a65",
+        "tertiary-fixed":             "#d9d7f8",
+        "on-tertiary-fixed-variant":  "#54546f",
+        "on-surface":                 "#2b3437",
+        "on-primary-fixed":           "#003f7d",
+        "on-primary-container":       "#00519e",
+        "on-tertiary-fixed":          "#383751",
+        "surface-container-low":      "#f1f4f6",
+        "surface-dim":                "#d1dce0",
+        "secondary-fixed-dim":        "#c9d6e3",
+        "on-error-container":         "#752121",
+        "surface-container-high":     "#e3e9ec",
+        "surface-variant":            "#dbe4e7",
+        "tertiary-container":         "#d9d7f8",
+        "surface-container-highest":  "#dbe4e7",
+        "secondary-dim":              "#48555f"
+      },
+      borderRadius: {
+        "DEFAULT": "0.25rem",
+        "lg":      "0.5rem",
+        "xl":      "0.75rem",
+        "full":    "9999px"
+      },
+      fontFamily: {
+        "headline": ["Inter", "sans-serif"],
+        "body":     ["Inter", "sans-serif"],
+        "label":    ["Inter", "sans-serif"]
+      }
+    }
+  }
+}
+</script>
+<style>
+  body { font-family: 'Inter', sans-serif; }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+  .glass-effect { background: rgba(248,249,250,0.8); backdrop-filter: blur(12px); }
+  .ghost-border { outline: 1px solid rgba(171,179,183,0.15); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #abb3b7; border-radius: 10px; }
+
+  /* Code editor (test-forge, schema-detective) */
+  .code-editor { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace; }
+  .editor-bg   { background: #1e1e2e; color: #cdd6f4; }
+  /* Arabic text (arabic-bench) */
+  .arabic-text { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; }
+  /* Scrollbar utilities */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #abb3b7; border-radius: 10px; }
+  /* Prompt-bench iOS overrides — scoped so they only affect prompt-bench internals */
+  .toolbar-blur { background: rgba(242,242,247,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+  .btn-primary  { display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:#007AFF;color:#fff;border-radius:8px;font-size:13px;font-weight:600;border:none;cursor:pointer; }
+  .btn-secondary{ display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:rgba(0,0,0,0.06);color:#3C3C43;border-radius:7px;font-size:12px;font-weight:500;border:none;cursor:pointer; }
+  .section-label{ font-size:11px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:.06em; }
+  .sys-label    { color: #1C1C1E; }
+  .text-sys-label { color: #1C1C1E; }
+</style>
+{% block extra_head %}{% endblock %}
+<meta name="csrf-token" content="{{ csrf_token() }}"/>
+</head>
+<body class="bg-surface text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+{% block content %}{% endblock %}
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>
