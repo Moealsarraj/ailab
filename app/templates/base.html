@@ -74,7 +74,7 @@ tailwind.config = {
     --border: #1e2234;
   }
   *, *::before, *::after { box-sizing: border-box; }
-  html, body {
+  html, body { height: 100%; overflow: hidden;
     background: #080c1a !important;
     color: #e2e4f0;
     font-family: DM Sans, sans-serif;
@@ -151,18 +151,18 @@ tailwind.config = {
   /* Back-to-hub button */
   .hub-back-btn {
     position: fixed;
-    bottom: 1.25rem;
-    left: 1.25rem;
+    top: 0.9rem;
+    left: 1rem;
     z-index: 9999;
     display: flex;
     align-items: center;
     gap: 5px;
-    padding: 6px 14px 6px 9px;
+    padding: 4px 10px 4px 7px;
     border-radius: 100px;
     background: rgba(129,140,248, .12);
     border: 1px solid rgba(129,140,248, .28);
     color: #818cf8;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     text-decoration: none;
     backdrop-filter: blur(10px);
