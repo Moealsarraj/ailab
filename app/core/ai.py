@@ -41,7 +41,7 @@ _PREMIUM_MODELS = {
     "openai":     "gpt-4o-mini",
     "deepseek":   "deepseek-chat",
     "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    "cohere":     "command-r-plus",
+    "cohere":     "command-r",
 }
 
 # ── Task-specific model routing ──
@@ -57,7 +57,7 @@ _TASK_MODELS = {
         "mistral":    "mistral-medium-latest",
         "deepseek":   "deepseek-chat",
         "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        "cohere":     "command-r-plus",
+        "cohere":     "command-r",
     },
     "code": {
         "groq":       "llama-3.3-70b-versatile",
@@ -66,7 +66,7 @@ _TASK_MODELS = {
         "mistral":    "mistral-medium-latest",
         "deepseek":   "deepseek-chat",
         "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        "cohere":     "command-r-plus",
+        "cohere":     "command-r",
     },
     "fast": {
         "groq":       "llama-3.1-8b-instant",
@@ -196,6 +196,8 @@ def call_ai_single(provider_name: str, messages: list, system: str = "",
         messages = [{"role": "system", "content": system}] + messages
     if provider_name == "gemini":
         return _post_gemini(prov["key"], model, messages, max_tokens, prov["timeout"])
+    if provider_name == "cohere":
+        return _post_cohere(prov["key"], model, messages, max_tokens, prov["timeout"])
     return _post_openai(
         prov["url"], prov["key"], model,
         messages, max_tokens, prov["extra"], prov["timeout"]
@@ -219,6 +221,22 @@ def _post_openai(url, key, model, messages, max_tokens, extra_headers, timeout=6
         timeout=timeout)
     r.raise_for_status()
     return _clean(r.json()["choices"][0]["message"]["content"])
+
+
+def _post_cohere(key: str, model: str, messages: list, max_tokens: int, timeout: int = 45) -> str:
+    """Call Cohere V2 Chat API."""
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    r = requests.post("https://api.cohere.com/v2/chat",
+        headers=headers,
+        json={"model": model, "messages": messages, "max_tokens": max_tokens},
+        timeout=timeout)
+    r.raise_for_status()
+    data = r.json()
+    # V2 returns content as list of blocks
+    content = data.get("message", {}).get("content", [])
+    if content and isinstance(content, list):
+        return _clean(content[0].get("text", ""))
+    return _clean(str(data))
 
 
 def _build_chain(task_hint: str) -> list[dict]:
@@ -281,13 +299,15 @@ def call_ai(messages: list, system: str = "", max_tokens: int = 2048,
             logger.debug("Trying %s/%s for task=%s", prov["name"], prov["model"], task_hint)
             if prov["name"] == "gemini":
                 return _post_gemini(prov["key"], prov["model"], messages, max_tokens, prov["timeout"])
+            if prov["name"] == "cohere":
+                return _post_cohere(prov["key"], prov["model"], messages, max_tokens, prov["timeout"])
             return _post_openai(
                 prov["url"], prov["key"], prov["model"],
                 messages, max_tokens, prov["extra"], prov["timeout"]
             )
         except requests.exceptions.HTTPError as e:
             status = e.response.status_code if e.response is not None else 0
-            if status in (429, 503, 502):
+            if status in (402, 429, 503, 502):
                 logger.debug("Provider %s returned %s, trying next", prov["name"], status)
                 last_exc = e
                 continue
