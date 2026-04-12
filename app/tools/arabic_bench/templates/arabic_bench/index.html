@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Arabic Bench — Arabic NLP Evaluation Tool{% endblock %}
+{% block title %}Arabic Bench — Arabic NLP Evaluation Platform{% endblock %}
 
 {% block content %}
 <div class="flex flex-col h-screen overflow-hidden">
@@ -7,6 +7,7 @@
   <!-- Header -->
   <header class="w-full bg-white flex items-center px-6 py-3 border-b border-slate-100 sticky top-0 z-50 shrink-0">
     <span class="text-xl font-bold text-on-surface tracking-tight">Arabic Bench</span>
+    <span class="ml-3 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold bg-primary-container px-2 py-0.5 rounded">NLP Platform</span>
   </header>
 
   <div class="flex flex-1 overflow-hidden">
@@ -23,173 +24,328 @@
         </div>
       </div>
       <nav class="space-y-1">
-        <a class="bg-white text-blue-700 shadow-sm rounded-lg flex items-center gap-3 px-3 py-2 text-sm font-medium" href="#">
-          <span class="material-symbols-outlined">history</span>
-          Evaluation
-        </a>
+        <button onclick="showTab('evaluate')" id="nav-evaluate"
+          class="w-full text-left bg-white text-primary shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
+          <span class="material-symbols-outlined text-[20px]">rate_review</span>
+          Evaluate
+        </button>
+        <button onclick="showTab('suite')" id="nav-suite"
+          class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
+          <span class="material-symbols-outlined text-[20px]">dataset</span>
+          Test Suite
+        </button>
+        <button onclick="showTab('history')" id="nav-history"
+          class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
+          <span class="material-symbols-outlined text-[20px]">history</span>
+          History
+        </button>
       </nav>
+
+      <!-- Sidebar stats -->
+      <div class="mt-auto pt-4 border-t border-slate-200 space-y-2">
+        <div class="flex items-center justify-between px-2">
+          <span class="text-[11px] text-on-surface-variant">Test Cases</span>
+          <span class="text-[11px] font-bold text-on-surface" id="sidebar-total-cases">0</span>
+        </div>
+        <div class="flex items-center justify-between px-2">
+          <span class="text-[11px] text-on-surface-variant">Categories</span>
+          <span class="text-[11px] font-bold text-on-surface" id="sidebar-total-cats">0</span>
+        </div>
+        <div class="flex items-center justify-between px-2">
+          <span class="text-[11px] text-on-surface-variant">History</span>
+          <span class="text-[11px] font-bold text-on-surface" id="sidebar-history-count">0</span>
+        </div>
+      </div>
     </aside>
 
     <!-- Main -->
     <main class="flex-1 overflow-y-auto bg-surface p-8">
-      <div class="max-w-7xl mx-auto grid grid-cols-12 gap-8">
 
-        <!-- Left Col: Input + Critique -->
-        <div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
+      <!-- TAB 1: EVALUATE -->
+      <div id="tab-evaluate" class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-12 gap-8">
 
-          <!-- 2-col comparison inputs -->
-          <div class="grid grid-cols-2 gap-6">
+          <!-- Left Col: Input + Critique -->
+          <div class="col-span-12 lg:col-span-8 flex flex-col gap-6">
 
-            <!-- AI Response -->
-            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-4">
-              <div class="flex justify-between items-center">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-primary">AI Response</h3>
-                <span class="bg-primary-container text-on-primary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">AI Output</span>
+            <!-- 2-col comparison inputs -->
+            <div class="grid grid-cols-2 gap-6">
+
+              <!-- AI Response -->
+              <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-primary">AI Response</h3>
+                  <span class="bg-primary-container text-on-primary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">AI Output</span>
+                </div>
+                <textarea id="ai-response-input"
+                  class="arabic-text w-full flex-1 min-h-[280px] text-base leading-loose text-right p-4 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-on-surface-variant/50"
+                  dir="rtl"
+                  placeholder="الصق النص العربي الذي أنتجه نموذج الذكاء الاصطناعي هنا..."></textarea>
               </div>
-              <textarea id="ai-response-input"
-                class="arabic-text w-full flex-1 min-h-[280px] text-base leading-loose text-right p-4 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-on-surface-variant/50"
-                dir="rtl"
-                placeholder="الصق النص العربي الذي أنتجه نموذج الذكاء الاصطناعي هنا..."></textarea>
-            </div>
 
-            <!-- Reference Answer -->
-            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-4">
-              <div class="flex justify-between items-center">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">Reference Answer</h3>
-                <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">Gold Standard</span>
+              <!-- Reference Answer -->
+              <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-secondary">Reference Answer</h3>
+                  <span class="bg-secondary-container text-on-secondary-container text-[10px] font-bold px-2 py-0.5 rounded uppercase">Gold Standard</span>
+                </div>
+                <textarea id="reference-input"
+                  class="arabic-text w-full flex-1 min-h-[280px] text-base leading-loose text-right p-4 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-on-surface-variant/50"
+                  dir="rtl"
+                  placeholder="الصق الإجابة المرجعية (المحددة من قِبل الخبير) هنا..."></textarea>
               </div>
-              <textarea id="reference-input"
-                class="arabic-text w-full flex-1 min-h-[280px] text-base leading-loose text-right p-4 bg-surface-container-low rounded-lg border-none focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-on-surface-variant/50"
-                dir="rtl"
-                placeholder="الصق الإجابة المرجعية (المحددة من قِبل الخبير) هنا..."></textarea>
+
+            </div>
+
+            <!-- Evaluate Button -->
+            <div class="flex items-center gap-4">
+              <button id="btn-evaluate"
+                class="flex-1 py-3 bg-primary text-on-primary font-semibold rounded-xl shadow-lg hover:bg-primary-dim hover:shadow-primary/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">analytics</span>
+                <span>Run Evaluation</span>
+              </button>
+              <button onclick="loadDemo()" class="flex items-center gap-1.5 text-sm text-primary font-medium hover:underline transition-colors shrink-0">
+                <span class="material-symbols-outlined text-base">play_circle</span>Try a demo
+              </button>
+            </div>
+
+            <!-- Strengths & Weaknesses (hidden until evaluation) -->
+            <div id="strengths-weaknesses-card" class="hidden grid grid-cols-2 gap-6">
+              <!-- Strengths -->
+              <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10">
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="material-symbols-outlined text-green-600 text-[20px]">thumb_up</span>
+                  <h4 class="text-xs font-bold uppercase tracking-widest text-green-700">نقاط القوة</h4>
+                </div>
+                <ul id="strengths-list" dir="rtl" class="arabic-text space-y-2 text-sm text-on-surface-variant leading-relaxed"></ul>
+              </div>
+              <!-- Weaknesses -->
+              <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10">
+                <div class="flex items-center gap-2 mb-4">
+                  <span class="material-symbols-outlined text-red-600 text-[20px]">thumb_down</span>
+                  <h4 class="text-xs font-bold uppercase tracking-widest text-red-700">نقاط الضعف</h4>
+                </div>
+                <ul id="weaknesses-list" dir="rtl" class="arabic-text space-y-2 text-sm text-on-surface-variant leading-relaxed"></ul>
+              </div>
+            </div>
+
+            <!-- Critique Card (hidden until evaluation) -->
+            <div id="critique-card" class="hidden bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
+              <div class="flex items-center gap-3 mb-6">
+                <span class="material-symbols-outlined text-primary">rate_review</span>
+                <h3 class="text-lg font-bold tracking-tight">التحليل النوعي والنقد الخبير</h3>
+              </div>
+              <div id="critique-text" class="arabic-text text-lg leading-loose text-on-surface-variant space-y-4" dir="rtl"></div>
             </div>
 
           </div>
 
-          <!-- Evaluate Button -->
-          <div class="flex items-center gap-4">
-            <button id="btn-evaluate"
-              class="flex-1 py-3 bg-primary text-on-primary font-semibold rounded-xl shadow-lg hover:bg-primary-dim hover:shadow-primary/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">analytics</span>
-              <span>Run Evaluation</span>
-            </button>
-            <button onclick="loadDemo()" class="flex items-center gap-1.5 text-sm text-primary font-medium hover:underline transition-colors shrink-0">
-              <span class="material-symbols-outlined text-base">play_circle</span>Try a demo
-            </button>
-          </div>
+          <!-- Right Col: Metrics -->
+          <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
 
-          <!-- Critique Card (hidden until evaluation) -->
-          <div id="critique-card" class="hidden bg-surface-container-lowest rounded-xl p-8 border border-outline-variant/10">
-            <div class="flex items-center gap-3 mb-6">
-              <span class="material-symbols-outlined text-primary">rate_review</span>
-              <h3 class="text-lg font-bold tracking-tight">التحليل النوعي والنقد الخبير</h3>
+            <!-- Empty State -->
+            <div id="empty-state" class="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-5xl text-outline mb-4" style="font-variation-settings:'FILL' 1;">analytics</span>
+              <p class="text-sm font-medium">Paste both texts and run the evaluation</p>
+              <p class="text-xs text-outline mt-1">Scores and critique will appear here</p>
+              <button onclick="loadExample()" class="mt-3 text-xs font-medium hover:underline transition-colors" style="color:#6366f1; font-size:12px;">See example &#8599;</button>
             </div>
-            <div id="critique-text" class="arabic-text text-lg leading-loose text-on-surface-variant space-y-4"></div>
+
+            <!-- Loading State -->
+            <div id="loading-state" class="hidden flex flex-col items-center justify-center py-20 gap-4">
+              <div class="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-sm text-on-surface-variant">Evaluating Arabic response...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="error-state" class="hidden flex flex-col items-center justify-center py-16 text-center">
+              <span class="material-symbols-outlined text-error text-4xl mb-3">error</span>
+              <p id="error-msg" class="text-sm text-error font-medium px-8"></p>
+            </div>
+
+            <!-- Clear Example Banner -->
+            <div id="example-banner" class="hidden flex items-center justify-between px-4 py-2 rounded-lg" style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15);">
+              <span class="text-xs font-medium" style="color:#6366f1;">Viewing example output</span>
+              <button onclick="clearExample()" class="text-xs font-medium hover:underline" style="color:#6366f1;">Clear example</button>
+            </div>
+
+            <!-- Results -->
+            <div id="results" class="hidden flex flex-col gap-6">
+
+              <!-- Score Card -->
+              <div class="bg-primary text-on-primary rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-20">
+                  <span class="material-symbols-outlined text-6xl" style="font-variation-settings:'FILL' 1;">verified</span>
+                </div>
+                <span class="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-2">Total Evaluation Score</span>
+                <div class="flex items-baseline gap-1">
+                  <span id="score-value" class="text-7xl font-bold tracking-tighter">--</span>
+                  <span class="text-2xl font-medium opacity-60">/100</span>
+                </div>
+                <div id="verdict-badge" class="mt-4 flex items-center gap-2 bg-on-primary/10 px-4 py-1.5 rounded-full">
+                  <span id="verdict-dot" class="w-2 h-2 rounded-full bg-green-400"></span>
+                  <span id="verdict-text" class="text-sm font-semibold uppercase tracking-wider">--</span>
+                </div>
+                <!-- Detected Dialect Badge -->
+                <div id="dialect-badge" class="mt-3 hidden">
+                  <span id="dialect-badge-text" class="text-[10px] font-bold uppercase tracking-widest bg-white/15 px-3 py-1 rounded-full"></span>
+                </div>
+              </div>
+
+              <!-- Metric Breakdown -->
+              <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-5">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Metric Breakdown</h4>
+
+                <!-- Correctness -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Correctness</span>
+                    <span id="label-correctness" class="text-xs font-bold text-primary">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-correctness" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+
+                <!-- Grammar -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Grammar &amp; Syntax</span>
+                    <span id="label-grammar" class="text-xs font-bold text-primary">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-grammar" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+
+                <!-- Fluency -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Fluency</span>
+                    <span id="label-fluency" class="text-xs font-bold text-primary">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-fluency" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+
+                <!-- Terminology Accuracy -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Terminology Accuracy</span>
+                    <span id="label-terminology" class="text-xs font-bold text-primary">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-terminology" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+
+                <!-- Dialect Awareness -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Dialect Awareness</span>
+                    <span id="label-dialect" class="text-xs font-bold text-primary">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-dialect" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+
+                <!-- Cultural Appropriateness -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Cultural Appropriateness</span>
+                    <span id="label-cultural" class="text-xs font-bold text-primary">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-cultural" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+
+                <!-- Hallucination Risk (inverted: low = good) -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Hallucination Risk</span>
+                    <span id="label-hallucination" class="text-xs font-bold text-green-600">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-hallucination" class="h-full bg-green-500 rounded-full transition-all duration-700" style="width:0%"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /results -->
           </div>
 
+        </div><!-- /grid -->
+      </div><!-- /tab-evaluate -->
+
+      <!-- TAB 2: TEST SUITE -->
+      <div id="tab-suite" class="hidden max-w-7xl mx-auto">
+
+        <!-- Category Grid (shown when no category selected) -->
+        <div id="suite-categories">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-bold text-on-surface tracking-tight">Test Suite</h2>
+              <p class="text-sm text-on-surface-variant mt-1">Browse curated Arabic NLP evaluation test cases across 8 categories</p>
+            </div>
+          </div>
+          <div id="category-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
         </div>
 
-        <!-- Right Col: Metrics -->
-        <div class="col-span-12 lg:col-span-4 flex flex-col gap-6">
-
-          <!-- Empty State -->
-          <div id="empty-state" class="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
-            <span class="material-symbols-outlined text-5xl text-outline mb-4" style="font-variation-settings:'FILL' 1;">analytics</span>
-            <p class="text-sm font-medium">Paste both texts and run the evaluation</p>
-            <p class="text-xs text-outline mt-1">Scores and critique will appear here</p>
-            <button onclick="loadExample()" class="mt-3 text-xs font-medium hover:underline transition-colors" style="color:#6366f1; font-size:12px;">See example &#8599;</button>
+        <!-- Category Detail (shown when a category is selected) -->
+        <div id="suite-detail" class="hidden">
+          <div class="flex items-center gap-4 mb-6">
+            <button onclick="backToCategories()" class="flex items-center gap-1.5 text-sm text-primary font-medium hover:underline transition-colors">
+              <span class="material-symbols-outlined text-base">arrow_back</span>Back to categories
+            </button>
           </div>
-
-          <!-- Loading State -->
-          <div id="loading-state" class="hidden flex flex-col items-center justify-center py-20 gap-4">
-            <div class="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-sm text-on-surface-variant">Evaluating Arabic response…</p>
-          </div>
-
-          <!-- Error State -->
-          <div id="error-state" class="hidden flex flex-col items-center justify-center py-16 text-center">
-            <span class="material-symbols-outlined text-error text-4xl mb-3">error</span>
-            <p id="error-msg" class="text-sm text-error font-medium px-8"></p>
-          </div>
-
-          <!-- Clear Example Banner -->
-          <div id="example-banner" class="hidden flex items-center justify-between px-4 py-2 rounded-lg" style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15);">
-            <span class="text-xs font-medium" style="color:#6366f1;">Viewing example output</span>
-            <button onclick="clearExample()" class="text-xs font-medium hover:underline" style="color:#6366f1;">Clear example</button>
-          </div>
-
-          <!-- Results -->
-          <div id="results" class="hidden flex flex-col gap-6">
-
-            <!-- Score Card -->
-            <div class="bg-primary text-on-primary rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden">
-              <div class="absolute top-0 right-0 p-4 opacity-20">
-                <span class="material-symbols-outlined text-6xl" style="font-variation-settings:'FILL' 1;">verified</span>
+          <div id="suite-detail-header" class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+                <span id="detail-cat-icon" class="material-symbols-outlined text-primary"></span>
               </div>
-              <span class="text-xs font-bold uppercase tracking-[0.2em] opacity-80 mb-2">Total Evaluation Score</span>
-              <div class="flex items-baseline gap-1">
-                <span id="score-value" class="text-7xl font-bold tracking-tighter">—</span>
-                <span class="text-2xl font-medium opacity-60">/100</span>
-              </div>
-              <div id="verdict-badge" class="mt-6 flex items-center gap-2 bg-on-primary/10 px-4 py-1.5 rounded-full">
-                <span id="verdict-dot" class="w-2 h-2 rounded-full bg-green-400"></span>
-                <span id="verdict-text" class="text-sm font-semibold uppercase tracking-wider">—</span>
+              <div>
+                <h2 id="detail-cat-name" class="text-xl font-bold text-on-surface tracking-tight"></h2>
+                <p id="detail-cat-name-ar" class="text-sm text-on-surface-variant arabic-text" dir="rtl"></p>
               </div>
             </div>
+            <button onclick="runAllInCategory()" id="btn-run-all"
+              class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary font-semibold rounded-lg text-sm hover:bg-primary-dim transition-all">
+              <span class="material-symbols-outlined text-base">play_arrow</span>
+              Run All
+            </button>
+          </div>
+          <div id="suite-cases-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+        </div>
+      </div><!-- /tab-suite -->
 
-            <!-- Metric Breakdown -->
-            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-6">
-              <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Metric Breakdown</h4>
-
-              <!-- Correctness -->
-              <div class="space-y-2">
-                <div class="flex justify-between items-end">
-                  <span class="text-sm font-semibold">Correctness</span>
-                  <span id="label-correctness" class="text-xs font-bold text-primary">—</span>
-                </div>
-                <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                  <div id="bar-correctness" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
-                </div>
-              </div>
-
-              <!-- Grammar -->
-              <div class="space-y-2">
-                <div class="flex justify-between items-end">
-                  <span class="text-sm font-semibold">Grammar &amp; Syntax</span>
-                  <span id="label-grammar" class="text-xs font-bold text-primary">—</span>
-                </div>
-                <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                  <div id="bar-grammar" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
-                </div>
-              </div>
-
-              <!-- Fluency -->
-              <div class="space-y-2">
-                <div class="flex justify-between items-end">
-                  <span class="text-sm font-semibold">Fluency</span>
-                  <span id="label-fluency" class="text-xs font-bold text-primary">—</span>
-                </div>
-                <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                  <div id="bar-fluency" class="h-full bg-primary rounded-full transition-all duration-700" style="width:0%"></div>
-                </div>
-              </div>
-
-              <!-- Hallucination Risk (inverted: low = good) -->
-              <div class="space-y-2">
-                <div class="flex justify-between items-end">
-                  <span class="text-sm font-semibold">Hallucination Risk</span>
-                  <span id="label-hallucination" class="text-xs font-bold text-green-600">—</span>
-                </div>
-                <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
-                  <div id="bar-hallucination" class="h-full bg-green-500 rounded-full transition-all duration-700" style="width:0%"></div>
-                </div>
-              </div>
-            </div>
-
-          </div><!-- /results -->
+      <!-- TAB 3: HISTORY -->
+      <div id="tab-history" class="hidden max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-on-surface tracking-tight">Evaluation History</h2>
+            <p class="text-sm text-on-surface-variant mt-1">Past evaluation results stored in your browser</p>
+          </div>
+          <button onclick="clearHistory()" id="btn-clear-history"
+            class="hidden flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-base">delete</span>
+            Clear History
+          </button>
         </div>
 
-      </div><!-- /grid -->
+        <!-- History empty state -->
+        <div id="history-empty" class="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-5xl text-outline mb-4">history</span>
+          <p class="text-sm font-medium">No evaluations yet</p>
+          <p class="text-xs text-outline mt-1">Run an evaluation and results will appear here</p>
+        </div>
+
+        <!-- History list -->
+        <div id="history-list" class="hidden space-y-3"></div>
+      </div><!-- /tab-history -->
+
     </main>
   </div>
 </div>
@@ -198,101 +354,207 @@
 {% block extra_scripts %}
 <script>
 (function () {
-  const CSRF = document.querySelector('meta[name="csrf-token"]').content;
+  /* ─── Server Data ─── */
+  var CATEGORIES = {{ categories | tojson }};
+  var DATASET    = {{ dataset | tojson }};
 
-  const aiInput   = document.getElementById('ai-response-input');
-  const refInput  = document.getElementById('reference-input');
-  const btnEval   = document.getElementById('btn-evaluate');
+  /* ─── Constants ─── */
+  var CSRF = document.querySelector('meta[name="csrf-token"]').content;
+  var HISTORY_KEY = 'arabic_bench_history';
 
-  const emptyState   = document.getElementById('empty-state');
-  const loadingState = document.getElementById('loading-state');
-  const errorState   = document.getElementById('error-state');
-  const errorMsg     = document.getElementById('error-msg');
-  const results      = document.getElementById('results');
-  const critiqueCard = document.getElementById('critique-card');
-  const critiqueText = document.getElementById('critique-text');
+  /* ─── DOM: Evaluate Tab ─── */
+  var aiInput   = document.getElementById('ai-response-input');
+  var refInput  = document.getElementById('reference-input');
+  var btnEval   = document.getElementById('btn-evaluate');
 
-  const scoreValue    = document.getElementById('score-value');
-  const verdictDot    = document.getElementById('verdict-dot');
-  const verdictText   = document.getElementById('verdict-text');
+  var emptyState   = document.getElementById('empty-state');
+  var loadingState = document.getElementById('loading-state');
+  var errorState   = document.getElementById('error-state');
+  var errorMsg     = document.getElementById('error-msg');
+  var results      = document.getElementById('results');
+  var critiqueCard = document.getElementById('critique-card');
+  var critiqueText = document.getElementById('critique-text');
 
-  const barCorrectness    = document.getElementById('bar-correctness');
-  const barGrammar        = document.getElementById('bar-grammar');
-  const barFluency        = document.getElementById('bar-fluency');
-  const barHallucination  = document.getElementById('bar-hallucination');
-  const labelCorrectness  = document.getElementById('label-correctness');
-  const labelGrammar      = document.getElementById('label-grammar');
-  const labelFluency      = document.getElementById('label-fluency');
-  const labelHallucination = document.getElementById('label-hallucination');
+  var scoreValue    = document.getElementById('score-value');
+  var verdictDot    = document.getElementById('verdict-dot');
+  var verdictText   = document.getElementById('verdict-text');
+  var dialectBadge  = document.getElementById('dialect-badge');
+  var dialectBadgeText = document.getElementById('dialect-badge-text');
 
+  var barCorrectness    = document.getElementById('bar-correctness');
+  var barGrammar        = document.getElementById('bar-grammar');
+  var barFluency        = document.getElementById('bar-fluency');
+  var barHallucination  = document.getElementById('bar-hallucination');
+  var barTerminology    = document.getElementById('bar-terminology');
+  var barDialect        = document.getElementById('bar-dialect');
+  var barCultural       = document.getElementById('bar-cultural');
+  var labelCorrectness  = document.getElementById('label-correctness');
+  var labelGrammar      = document.getElementById('label-grammar');
+  var labelFluency      = document.getElementById('label-fluency');
+  var labelHallucination = document.getElementById('label-hallucination');
+  var labelTerminology   = document.getElementById('label-terminology');
+  var labelDialect       = document.getElementById('label-dialect');
+  var labelCultural      = document.getElementById('label-cultural');
+
+  var strengthsWeaknessesCard = document.getElementById('strengths-weaknesses-card');
+  var strengthsList = document.getElementById('strengths-list');
+  var weaknessesList = document.getElementById('weaknesses-list');
+
+  /* ─── DOM: Tabs ─── */
+  var tabEvaluate = document.getElementById('tab-evaluate');
+  var tabSuite    = document.getElementById('tab-suite');
+  var tabHistory  = document.getElementById('tab-history');
+  var navEvaluate = document.getElementById('nav-evaluate');
+  var navSuite    = document.getElementById('nav-suite');
+  var navHistory  = document.getElementById('nav-history');
+
+  /* ─── DOM: Test Suite ─── */
+  var suiteCategories = document.getElementById('suite-categories');
+  var suiteDetail     = document.getElementById('suite-detail');
+  var categoryGrid    = document.getElementById('category-grid');
+  var suiteCasesList  = document.getElementById('suite-cases-list');
+  var detailCatIcon   = document.getElementById('detail-cat-icon');
+  var detailCatName   = document.getElementById('detail-cat-name');
+  var detailCatNameAr = document.getElementById('detail-cat-name-ar');
+
+  /* ─── Sidebar Stats ─── */
+  document.getElementById('sidebar-total-cases').textContent = DATASET.length;
+  document.getElementById('sidebar-total-cats').textContent = CATEGORIES.length;
+  updateHistoryCount();
+
+  /* ─── Current state ─── */
+  var currentTab = 'evaluate';
+  var currentCategory = null;
+  var runAllQueue = [];
+  var runAllRunning = false;
+
+  /* ─── Dataset lookup ─── */
+  var datasetByCategory = {};
+  DATASET.forEach(function(item) {
+    if (!datasetByCategory[item.category]) datasetByCategory[item.category] = [];
+    datasetByCategory[item.category].push(item);
+  });
+
+  /* ═══════════════════════════════════════════════ */
+  /* TAB SWITCHING                                   */
+  /* ═══════════════════════════════════════════════ */
+  var NAV_ACTIVE  = 'w-full text-left bg-white text-primary shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all';
+  var NAV_DEFAULT = 'w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all';
+
+  function showTab(tabName) {
+    currentTab = tabName;
+
+    tabEvaluate.classList.add('hidden');
+    tabSuite.classList.add('hidden');
+    tabHistory.classList.add('hidden');
+
+    navEvaluate.className = NAV_DEFAULT;
+    navSuite.className    = NAV_DEFAULT;
+    navHistory.className  = NAV_DEFAULT;
+
+    if (tabName === 'evaluate') {
+      tabEvaluate.classList.remove('hidden');
+      navEvaluate.className = NAV_ACTIVE;
+    } else if (tabName === 'suite') {
+      tabSuite.classList.remove('hidden');
+      navSuite.className = NAV_ACTIVE;
+      renderCategoryGrid();
+    } else if (tabName === 'history') {
+      tabHistory.classList.remove('hidden');
+      navHistory.className = NAV_ACTIVE;
+      renderHistory();
+    }
+  }
+  window.showTab = showTab;
+
+  /* ═══════════════════════════════════════════════ */
+  /* EVALUATE TAB                                    */
+  /* ═══════════════════════════════════════════════ */
   btnEval.addEventListener('click', runEval);
 
   async function runEval() {
-    const ai_response = aiInput.value.trim();
-    const reference   = refInput.value.trim();
+    var ai_response = aiInput.value.trim();
+    var reference   = refInput.value.trim();
     if (!ai_response) { aiInput.focus(); return; }
     if (!reference)   { refInput.focus(); return; }
 
     showState('loading');
     critiqueCard.classList.add('hidden');
+    strengthsWeaknessesCard.classList.add('hidden');
 
     try {
-      const res = await fetch('api/evaluate', {
+      var res = await fetch('api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
-        body: JSON.stringify({ ai_response, reference })
+        body: JSON.stringify({ ai_response: ai_response, reference: reference })
       });
-      const data = await res.json();
+      var data = await res.json();
       if (!res.ok) {
         showState('error');
-        errorMsg.textContent = data.error || 'Evaluation failed — try again.';
+        errorMsg.textContent = data.error || 'Evaluation failed -- try again.';
         return;
       }
       renderResults(data);
       showState('results');
-    } catch (_) {
+      saveToHistory(data);
+    } catch (e) {
       showState('error');
-      errorMsg.textContent = 'Network error — is the server running?';
+      errorMsg.textContent = 'Network error -- is the server running?';
     }
   }
 
   function renderResults(data) {
-    // Total score
-    const score = Math.min(100, Math.max(0, data.total_score || 0));
+    var score = Math.min(100, Math.max(0, data.total_score || 0));
     scoreValue.textContent = score;
 
-    // Verdict badge
-    const verdict = data.verdict || 'Fair';
+    var verdict = data.verdict || 'Fair';
     verdictText.textContent = verdict;
-    const dotColor = {
+    var dotColor = {
       'Highly Accurate': 'bg-green-400',
       'Good':            'bg-blue-300',
       'Fair':            'bg-amber-400',
-      'Poor':            'bg-red-400',
+      'Poor':            'bg-red-400'
     };
     verdictDot.className = 'w-2 h-2 rounded-full ' + (dotColor[verdict] || 'bg-slate-400');
 
-    // Metrics
-    setMetric(barCorrectness, labelCorrectness, data.correctness || 0, 'primary');
-    setMetric(barGrammar,     labelGrammar,     data.grammar     || 0, 'primary');
-    setMetric(barFluency,     labelFluency,     data.fluency     || 0, 'primary');
+    var dialect = data.detected_dialect || '';
+    if (dialect) {
+      dialectBadge.classList.remove('hidden');
+      dialectBadgeText.textContent = 'Dialect: ' + dialect;
+    } else {
+      dialectBadge.classList.add('hidden');
+    }
 
-    const risk = Math.min(100, Math.max(0, data.hallucination_risk || 0));
+    setMetric(barCorrectness, labelCorrectness, data.correctness || 0);
+    setMetric(barGrammar,     labelGrammar,     data.grammar     || 0);
+    setMetric(barFluency,     labelFluency,     data.fluency     || 0);
+    setMetric(barTerminology, labelTerminology, data.terminology_accuracy || 0);
+    setMetric(barDialect,     labelDialect,     data.dialect_awareness   || 0);
+    setMetric(barCultural,    labelCultural,    data.cultural_appropriateness || 0);
+
+    var risk = Math.min(100, Math.max(0, data.hallucination_risk || 0));
     barHallucination.style.width = risk + '%';
-    const riskLabel = risk < 20 ? 'Low' : risk < 50 ? 'Medium' : 'High';
+    var riskLabel = risk < 20 ? 'Low' : risk < 50 ? 'Medium' : 'High';
     labelHallucination.textContent = riskLabel + ' (' + risk + '%)';
-    const riskColor = risk < 20 ? 'text-green-600' : risk < 50 ? 'text-amber-600' : 'text-red-600';
+    var riskColor = risk < 20 ? 'text-green-600' : risk < 50 ? 'text-amber-600' : 'text-red-600';
     labelHallucination.className = 'text-xs font-bold ' + riskColor;
     barHallucination.className = 'h-full rounded-full transition-all duration-700 ' +
       (risk < 20 ? 'bg-green-500' : risk < 50 ? 'bg-amber-500' : 'bg-red-500');
 
-    // Critique (Arabic RTL paragraphs)
+    renderBulletList(strengthsList, data.strengths || [], '#16a34a');
+    renderBulletList(weaknessesList, data.weaknesses || [], '#dc2626');
+    if ((data.strengths && data.strengths.length) || (data.weaknesses && data.weaknesses.length)) {
+      strengthsWeaknessesCard.classList.remove('hidden');
+    } else {
+      strengthsWeaknessesCard.classList.add('hidden');
+    }
+
     while (critiqueText.firstChild) critiqueText.removeChild(critiqueText.firstChild);
-    const critique = (data.critique || '').trim();
+    var critique = (data.critique || '').trim();
     if (critique) {
-      critique.split(/\n+/).forEach(para => {
+      critique.split(/\n+/).forEach(function(para) {
         if (!para.trim()) return;
-        const p = document.createElement('p');
+        var p = document.createElement('p');
         p.textContent = para;
         critiqueText.appendChild(p);
       });
@@ -300,8 +562,24 @@
     }
   }
 
-  function setMetric(bar, label, value, color) {
-    const v = Math.min(100, Math.max(0, value));
+  function renderBulletList(ul, items, color) {
+    while (ul.firstChild) ul.removeChild(ul.firstChild);
+    (items || []).forEach(function(text) {
+      var li = document.createElement('li');
+      li.className = 'flex items-start gap-2';
+      var dot = document.createElement('span');
+      dot.className = 'mt-1.5 w-1.5 h-1.5 rounded-full shrink-0';
+      dot.style.background = color;
+      var span = document.createElement('span');
+      span.textContent = text;
+      li.appendChild(dot);
+      li.appendChild(span);
+      ul.appendChild(li);
+    });
+  }
+
+  function setMetric(bar, label, value) {
+    var v = Math.min(100, Math.max(0, value));
     bar.style.width = v + '%';
     label.textContent = v + '%';
   }
@@ -317,41 +595,85 @@
     else emptyState.classList.remove('hidden');
   }
 
-  const _demos = [
+  /* ─── History Persistence ─── */
+  function saveToHistory(result) {
+    var history = getHistory();
+    history.unshift({
+      id: Date.now(),
+      date: new Date().toISOString(),
+      total_score: result.total_score,
+      verdict: result.verdict,
+      ai_snippet: aiInput.value.substring(0, 100),
+      ref_snippet: refInput.value.substring(0, 100),
+      full_result: result
+    });
+    if (history.length > 100) history = history.slice(0, 100);
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch(e) {}
+    updateHistoryCount();
+  }
+
+  function getHistory() {
+    try {
+      var raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  function updateHistoryCount() {
+    document.getElementById('sidebar-history-count').textContent = getHistory().length;
+  }
+
+  /* ─── Demo Data ─── */
+  var _demos = [
     {
-      ai: `الذكاء الاصطناعي هو فرع من علوم الحاسوب يهتم ببناء أنظمة قادرة على تنفيذ مهام تتطلب عادةً ذكاءً بشرياً. تشمل هذه المهام التعرف على الكلام، واتخاذ القرارات، وترجمة اللغات. يعتمد الذكاء الاصطناعي على خوارزميات التعلم الآلي لتحليل البيانات الضخمة واستخلاص الأنماط منها، مما يُمكّن الآلات من التحسن المستمر دون برمجة صريحة لكل حالة.`,
-      ref: `الذكاء الاصطناعي (AI) هو مجال في علم الحاسوب يسعى إلى محاكاة القدرات الإدراكية البشرية في الأنظمة الآلية. يتضمن ذلك التعلم الآلي، ومعالجة اللغة الطبيعية، والرؤية الحاسوبية. تعتمد هذه الأنظمة على نماذج رياضية وبيانات ضخمة لاستخلاص الأنماط وتحسين الأداء تلقائياً عبر التجربة، دون الحاجة إلى برمجة القواعد بشكل صريح لكل موقف.`
+      ai: "\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064A \u0647\u0648 \u0641\u0631\u0639 \u0645\u0646 \u0639\u0644\u0648\u0645 \u0627\u0644\u062D\u0627\u0633\u0648\u0628 \u064A\u0647\u062A\u0645 \u0628\u0628\u0646\u0627\u0621 \u0623\u0646\u0638\u0645\u0629 \u0642\u0627\u062F\u0631\u0629 \u0639\u0644\u0649 \u062A\u0646\u0641\u064A\u0630 \u0645\u0647\u0627\u0645 \u062A\u062A\u0637\u0644\u0628 \u0639\u0627\u062F\u0629\u064B \u0630\u0643\u0627\u0621\u064B \u0628\u0634\u0631\u064A\u0627\u064B. \u062A\u0634\u0645\u0644 \u0647\u0630\u0647 \u0627\u0644\u0645\u0647\u0627\u0645 \u0627\u0644\u062A\u0639\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0643\u0644\u0627\u0645\u060C \u0648\u0627\u062A\u062E\u0627\u0630 \u0627\u0644\u0642\u0631\u0627\u0631\u0627\u062A\u060C \u0648\u062A\u0631\u062C\u0645\u0629 \u0627\u0644\u0644\u063A\u0627\u062A. \u064A\u0639\u062A\u0645\u062F \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064A \u0639\u0644\u0649 \u062E\u0648\u0627\u0631\u0632\u0645\u064A\u0627\u062A \u0627\u0644\u062A\u0639\u0644\u0645 \u0627\u0644\u0622\u0644\u064A \u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0628\u064A\u0627\u0646\u0627\u062A \u0627\u0644\u0636\u062E\u0645\u0629 \u0648\u0627\u0633\u062A\u062E\u0644\u0627\u0635 \u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0645\u0646\u0647\u0627\u060C \u0645\u0645\u0627 \u064A\u064F\u0645\u0643\u0651\u0646 \u0627\u0644\u0622\u0644\u0627\u062A \u0645\u0646 \u0627\u0644\u062A\u062D\u0633\u0646 \u0627\u0644\u0645\u0633\u062A\u0645\u0631 \u062F\u0648\u0646 \u0628\u0631\u0645\u062C\u0629 \u0635\u0631\u064A\u062D\u0629 \u0644\u0643\u0644 \u062D\u0627\u0644\u0629.",
+      ref: "\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064A (AI) \u0647\u0648 \u0645\u062C\u0627\u0644 \u0641\u064A \u0639\u0644\u0645 \u0627\u0644\u062D\u0627\u0633\u0648\u0628 \u064A\u0633\u0639\u0649 \u0625\u0644\u0649 \u0645\u062D\u0627\u0643\u0627\u0629 \u0627\u0644\u0642\u062F\u0631\u0627\u062A \u0627\u0644\u0625\u062F\u0631\u0627\u0643\u064A\u0629 \u0627\u0644\u0628\u0634\u0631\u064A\u0629 \u0641\u064A \u0627\u0644\u0623\u0646\u0638\u0645\u0629 \u0627\u0644\u0622\u0644\u064A\u0629. \u064A\u062A\u0636\u0645\u0646 \u0630\u0644\u0643 \u0627\u0644\u062A\u0639\u0644\u0645 \u0627\u0644\u0622\u0644\u064A\u060C \u0648\u0645\u0639\u0627\u0644\u062C\u0629 \u0627\u0644\u0644\u063A\u0629 \u0627\u0644\u0637\u0628\u064A\u0639\u064A\u0629\u060C \u0648\u0627\u0644\u0631\u0624\u064A\u0629 \u0627\u0644\u062D\u0627\u0633\u0648\u0628\u064A\u0629. \u062A\u0639\u062A\u0645\u062F \u0647\u0630\u0647 \u0627\u0644\u0623\u0646\u0638\u0645\u0629 \u0639\u0644\u0649 \u0646\u0645\u0627\u0630\u062C \u0631\u064A\u0627\u0636\u064A\u0629 \u0648\u0628\u064A\u0627\u0646\u0627\u062A \u0636\u062E\u0645\u0629 \u0644\u0627\u0633\u062A\u062E\u0644\u0627\u0635 \u0627\u0644\u0623\u0646\u0645\u0627\u0637 \u0648\u062A\u062D\u0633\u064A\u0646 \u0627\u0644\u0623\u062F\u0627\u0621 \u062A\u0644\u0642\u0627\u0626\u064A\u0627\u064B \u0639\u0628\u0631 \u0627\u0644\u062A\u062C\u0631\u0628\u0629\u060C \u062F\u0648\u0646 \u0627\u0644\u062D\u0627\u062C\u0629 \u0625\u0644\u0649 \u0628\u0631\u0645\u062C\u0629 \u0627\u0644\u0642\u0648\u0627\u0639\u062F \u0628\u0634\u0643\u0644 \u0635\u0631\u064A\u062D \u0644\u0643\u0644 \u0645\u0648\u0642\u0641."
     },
     {
-      ai: `تأسست الدولة العثمانية عام 1299م على يد عثمان الأول في منطقة الأناضول. امتدت الإمبراطورية لتشمل مناطق واسعة في آسيا وأفريقيا وأوروبا. بلغت ذروتها في القرن السادس عشر، وسقطت بعد الحرب العالمية الثانية وتأسست تركيا الحديثة عام 1923م.`,
-      ref: `تأسست الدولة العثمانية عام 1299م على يد عثمان الأول في شمال غرب الأناضول. توسعت تدريجياً لتصبح إمبراطورية كبرى امتدت عبر ثلاث قارات. بلغت ذروة قوتها في عهد السلطان سليمان القانوني في القرن السادس عشر الميلادي. انهارت الإمبراطورية إثر هزيمتها في الحرب العالمية الأولى، وأُعلن قيام الجمهورية التركية الحديثة عام 1923م على يد مصطفى كمال أتاتورك.`
+      ai: "\u062A\u0623\u0633\u0633\u062A \u0627\u0644\u062F\u0648\u0644\u0629 \u0627\u0644\u0639\u062B\u0645\u0627\u0646\u064A\u0629 \u0639\u0627\u0645 1299\u0645 \u0639\u0644\u0649 \u064A\u062F \u0639\u062B\u0645\u0627\u0646 \u0627\u0644\u0623\u0648\u0644 \u0641\u064A \u0645\u0646\u0637\u0642\u0629 \u0627\u0644\u0623\u0646\u0627\u0636\u0648\u0644. \u0627\u0645\u062A\u062F\u062A \u0627\u0644\u0625\u0645\u0628\u0631\u0627\u0637\u0648\u0631\u064A\u0629 \u0644\u062A\u0634\u0645\u0644 \u0645\u0646\u0627\u0637\u0642 \u0648\u0627\u0633\u0639\u0629 \u0641\u064A \u0622\u0633\u064A\u0627 \u0648\u0623\u0641\u0631\u064A\u0642\u064A\u0627 \u0648\u0623\u0648\u0631\u0648\u0628\u0627. \u0628\u0644\u063A\u062A \u0630\u0631\u0648\u062A\u0647\u0627 \u0641\u064A \u0627\u0644\u0642\u0631\u0646 \u0627\u0644\u0633\u0627\u062F\u0633 \u0639\u0634\u0631\u060C \u0648\u0633\u0642\u0637\u062A \u0628\u0639\u062F \u0627\u0644\u062D\u0631\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A\u0629 \u0627\u0644\u062B\u0627\u0646\u064A\u0629 \u0648\u062A\u0623\u0633\u0633\u062A \u062A\u0631\u0643\u064A\u0627 \u0627\u0644\u062D\u062F\u064A\u062B\u0629 \u0639\u0627\u0645 1923\u0645.",
+      ref: "\u062A\u0623\u0633\u0633\u062A \u0627\u0644\u062F\u0648\u0644\u0629 \u0627\u0644\u0639\u062B\u0645\u0627\u0646\u064A\u0629 \u0639\u0627\u0645 1299\u0645 \u0639\u0644\u0649 \u064A\u062F \u0639\u062B\u0645\u0627\u0646 \u0627\u0644\u0623\u0648\u0644 \u0641\u064A \u0634\u0645\u0627\u0644 \u063A\u0631\u0628 \u0627\u0644\u0623\u0646\u0627\u0636\u0648\u0644. \u062A\u0648\u0633\u0639\u062A \u062A\u062F\u0631\u064A\u062C\u064A\u0627\u064B \u0644\u062A\u0635\u0628\u062D \u0625\u0645\u0628\u0631\u0627\u0637\u0648\u0631\u064A\u0629 \u0643\u0628\u0631\u0649 \u0627\u0645\u062A\u062F\u062A \u0639\u0628\u0631 \u062B\u0644\u0627\u062B \u0642\u0627\u0631\u0627\u062A. \u0628\u0644\u063A\u062A \u0630\u0631\u0648\u0629 \u0642\u0648\u062A\u0647\u0627 \u0641\u064A \u0639\u0647\u062F \u0627\u0644\u0633\u0644\u0637\u0627\u0646 \u0633\u0644\u064A\u0645\u0627\u0646 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064A \u0641\u064A \u0627\u0644\u0642\u0631\u0646 \u0627\u0644\u0633\u0627\u062F\u0633 \u0639\u0634\u0631 \u0627\u0644\u0645\u064A\u0644\u0627\u062F\u064A. \u0627\u0646\u0647\u0627\u0631\u062A \u0627\u0644\u0625\u0645\u0628\u0631\u0627\u0637\u0648\u0631\u064A\u0629 \u0625\u062B\u0631 \u0647\u0632\u064A\u0645\u062A\u0647\u0627 \u0641\u064A \u0627\u0644\u062D\u0631\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A\u0629 \u0627\u0644\u0623\u0648\u0644\u0649\u060C \u0648\u0623\u064F\u0639\u0644\u0646 \u0642\u064A\u0627\u0645 \u0627\u0644\u062C\u0645\u0647\u0648\u0631\u064A\u0629 \u0627\u0644\u062A\u0631\u0643\u064A\u0629 \u0627\u0644\u062D\u062F\u064A\u062B\u0629 \u0639\u0627\u0645 1923\u0645 \u0639\u0644\u0649 \u064A\u062F \u0645\u0635\u0637\u0641\u0649 \u0643\u0645\u0627\u0644 \u0623\u062A\u0627\u062A\u0648\u0631\u0643."
     },
     {
-      ai: `الماء مركب كيميائي يتكون من ذرتين هيدروجين وذرة أكسجين. يغطي الماء نحو 70% من سطح كوكب الأرض. يتميز الماء بأنه المذيب العالمي ويوجد في ثلاث حالات: سائلة وصلبة وغازية. يعتبر الماء ضرورياً للحياة على الأرض.`,
-      ref: `الماء مركب كيميائي صيغته H₂O، يتألف من ذرتَي هيدروجين وذرة أكسجين مرتبطتين بروابط تساهمية. يُعدّ من أكثر المواد انتشاراً على سطح الأرض، إذ يُغطّي نحو 71% منه. يتميز بخصائص فيزيائية فريدة كارتفاع درجة غليانه نسبياً وكثافته القصوى عند 4 درجات مئوية. يتواجد في ثلاث حالات: سائلة وصلبة (جليد) وغازية (بخار ماء)، ويُشكّل الأساس الكيميائي لجميع أشكال الحياة المعروفة.`
+      ai: "\u0627\u0644\u0645\u0627\u0621 \u0645\u0631\u0643\u0628 \u0643\u064A\u0645\u064A\u0627\u0626\u064A \u064A\u062A\u0643\u0648\u0646 \u0645\u0646 \u0630\u0631\u062A\u064A\u0646 \u0647\u064A\u062F\u0631\u0648\u062C\u064A\u0646 \u0648\u0630\u0631\u0629 \u0623\u0643\u0633\u062C\u064A\u0646. \u064A\u063A\u0637\u064A \u0627\u0644\u0645\u0627\u0621 \u0646\u062D\u0648 70% \u0645\u0646 \u0633\u0637\u062D \u0643\u0648\u0643\u0628 \u0627\u0644\u0623\u0631\u0636. \u064A\u062A\u0645\u064A\u0632 \u0627\u0644\u0645\u0627\u0621 \u0628\u0623\u0646\u0647 \u0627\u0644\u0645\u0630\u064A\u0628 \u0627\u0644\u0639\u0627\u0644\u0645\u064A \u0648\u064A\u0648\u062C\u062F \u0641\u064A \u062B\u0644\u0627\u062B \u062D\u0627\u0644\u0627\u062A: \u0633\u0627\u0626\u0644\u0629 \u0648\u0635\u0644\u0628\u0629 \u0648\u063A\u0627\u0632\u064A\u0629. \u064A\u0639\u062A\u0628\u0631 \u0627\u0644\u0645\u0627\u0621 \u0636\u0631\u0648\u0631\u064A\u0627\u064B \u0644\u0644\u062D\u064A\u0627\u0629 \u0639\u0644\u0649 \u0627\u0644\u0623\u0631\u0636.",
+      ref: "\u0627\u0644\u0645\u0627\u0621 \u0645\u0631\u0643\u0628 \u0643\u064A\u0645\u064A\u0627\u0626\u064A \u0635\u064A\u063A\u062A\u0647 H\u2082O\u060C \u064A\u062A\u0623\u0644\u0641 \u0645\u0646 \u0630\u0631\u062A\u064E\u064A \u0647\u064A\u062F\u0631\u0648\u062C\u064A\u0646 \u0648\u0630\u0631\u0629 \u0623\u0643\u0633\u062C\u064A\u0646 \u0645\u0631\u062A\u0628\u0637\u062A\u064A\u0646 \u0628\u0631\u0648\u0627\u0628\u0637 \u062A\u0633\u0627\u0647\u0645\u064A\u0629. \u064A\u064F\u0639\u062F\u0651 \u0645\u0646 \u0623\u0643\u062B\u0631 \u0627\u0644\u0645\u0648\u0627\u062F \u0627\u0646\u062A\u0634\u0627\u0631\u0627\u064B \u0639\u0644\u0649 \u0633\u0637\u062D \u0627\u0644\u0623\u0631\u0636\u060C \u0625\u0630 \u064A\u064F\u063A\u0637\u0651\u064A \u0646\u062D\u0648 71% \u0645\u0646\u0647. \u064A\u062A\u0645\u064A\u0632 \u0628\u062E\u0635\u0627\u0626\u0635 \u0641\u064A\u0632\u064A\u0627\u0626\u064A\u0629 \u0641\u0631\u064A\u062F\u0629 \u0643\u0627\u0631\u062A\u0641\u0627\u0639 \u062F\u0631\u062C\u0629 \u063A\u0644\u064A\u0627\u0646\u0647 \u0646\u0633\u0628\u064A\u0627\u064B \u0648\u0643\u062B\u0627\u0641\u062A\u0647 \u0627\u0644\u0642\u0635\u0648\u0649 \u0639\u0646\u062F 4 \u062F\u0631\u062C\u0627\u062A \u0645\u0626\u0648\u064A\u0629. \u064A\u062A\u0648\u0627\u062C\u062F \u0641\u064A \u062B\u0644\u0627\u062B \u062D\u0627\u0644\u0627\u062A: \u0633\u0627\u0626\u0644\u0629 \u0648\u0635\u0644\u0628\u0629 (\u062C\u0644\u064A\u062F) \u0648\u063A\u0627\u0632\u064A\u0629 (\u0628\u062E\u0627\u0631 \u0645\u0627\u0621)\u060C \u0648\u064A\u064F\u0634\u0643\u0651\u0644 \u0627\u0644\u0623\u0633\u0627\u0633 \u0627\u0644\u0643\u064A\u0645\u064A\u0627\u0626\u064A \u0644\u062C\u0645\u064A\u0639 \u0623\u0634\u0643\u0627\u0644 \u0627\u0644\u062D\u064A\u0627\u0629 \u0627\u0644\u0645\u0639\u0631\u0648\u0641\u0629."
     }
   ];
-  let _demoIdx = 0;
+  var _demoIdx = 0;
 
   function loadDemo() {
-    const d = _demos[_demoIdx % _demos.length];
+    var d = _demos[_demoIdx % _demos.length];
     _demoIdx++;
     aiInput.value  = d.ai;
     refInput.value = d.ref;
     showState('empty');
     critiqueCard.classList.add('hidden');
+    strengthsWeaknessesCard.classList.add('hidden');
+    document.getElementById('example-banner').classList.add('hidden');
   }
   window.loadDemo = loadDemo;
 
   function loadExample() {
-    const exampleData = {
+    var exampleData = {
       total_score: 82,
       verdict: 'Good',
       correctness: 90,
       grammar: 85,
       fluency: 80,
       hallucination_risk: 25,
-      critique: 'الاستجابة تُظهر فهماً جيداً للموضوع وتغطي النقاط الرئيسية بشكل ملائم. المعلومات المقدمة دقيقة في معظمها مع بعض التبسيط الذي لا يؤثر على صحة المحتوى العام.\n\nمن حيث القواعد النحوية، النص سليم بشكل عام مع استخدام صحيح لعلامات الإعراب في أغلب المواضع. لوحظ بعض التكرار في الصياغة يمكن تحسينه لرفع مستوى الطلاقة.\n\nخطر الهلوسة منخفض نسبياً — لم تُذكر معلومات مختلقة، لكن هناك بعض التعميمات التي كان من الأفضل دعمها بأمثلة محددة. بشكل عام، الاستجابة تستحق تقييماً جيداً مع إمكانية التحسين في دقة التفاصيل وتنوع الأسلوب.'
+      dialect_awareness: 95,
+      cultural_appropriateness: 88,
+      terminology_accuracy: 78,
+      detected_dialect: 'MSA',
+      strengths: [
+        '\u062A\u063A\u0637\u064A\u0629 \u062C\u064A\u062F\u0629 \u0644\u0644\u0646\u0642\u0627\u0637 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629 \u0641\u064A \u0627\u0644\u0645\u0648\u0636\u0648\u0639',
+        '\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0633\u0644\u064A\u0645 \u0644\u0644\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0646\u062D\u0648\u064A\u0629 \u0641\u064A \u0645\u0639\u0638\u0645 \u0627\u0644\u0645\u0648\u0627\u0636\u0639',
+        '\u0627\u0644\u062A\u0632\u0627\u0645 \u0628\u0627\u0644\u0641\u0635\u062D\u0649 \u062F\u0648\u0646 \u062E\u0644\u0637 \u0628\u0627\u0644\u0639\u0627\u0645\u064A\u0629'
+      ],
+      weaknesses: [
+        '\u0628\u0639\u0636 \u0627\u0644\u062A\u0643\u0631\u0627\u0631 \u0641\u064A \u0627\u0644\u0635\u064A\u0627\u063A\u0629 \u064A\u0645\u0643\u0646 \u062A\u062D\u0633\u064A\u0646\u0647',
+        '\u062A\u0639\u0645\u064A\u0645\u0627\u062A \u0643\u0627\u0646 \u0645\u0646 \u0627\u0644\u0623\u0641\u0636\u0644 \u062F\u0639\u0645\u0647\u0627 \u0628\u0623\u0645\u062B\u0644\u0629 \u0645\u062D\u062F\u062F\u0629'
+      ],
+      critique: '\u0627\u0644\u0627\u0633\u062A\u062C\u0627\u0628\u0629 \u062A\u064F\u0638\u0647\u0631 \u0641\u0647\u0645\u0627\u064B \u062C\u064A\u062F\u0627\u064B \u0644\u0644\u0645\u0648\u0636\u0648\u0639 \u0648\u062A\u063A\u0637\u064A \u0627\u0644\u0646\u0642\u0627\u0637 \u0627\u0644\u0631\u0626\u064A\u0633\u064A\u0629 \u0628\u0634\u0643\u0644 \u0645\u0644\u0627\u0626\u0645. \u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0627\u062A \u0627\u0644\u0645\u0642\u062F\u0645\u0629 \u062F\u0642\u064A\u0642\u0629 \u0641\u064A \u0645\u0639\u0638\u0645\u0647\u0627 \u0645\u0639 \u0628\u0639\u0636 \u0627\u0644\u062A\u0628\u0633\u064A\u0637 \u0627\u0644\u0630\u064A \u0644\u0627 \u064A\u0624\u062B\u0631 \u0639\u0644\u0649 \u0635\u062D\u0629 \u0627\u0644\u0645\u062D\u062A\u0648\u0649 \u0627\u0644\u0639\u0627\u0645.\n\n\u0645\u0646 \u062D\u064A\u062B \u0627\u0644\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0646\u062D\u0648\u064A\u0629\u060C \u0627\u0644\u0646\u0635 \u0633\u0644\u064A\u0645 \u0628\u0634\u0643\u0644 \u0639\u0627\u0645 \u0645\u0639 \u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0635\u062D\u064A\u062D \u0644\u0639\u0644\u0627\u0645\u0627\u062A \u0627\u0644\u0625\u0639\u0631\u0627\u0628 \u0641\u064A \u0623\u063A\u0644\u0628 \u0627\u0644\u0645\u0648\u0627\u0636\u0639. \u0644\u0648\u062D\u0638 \u0628\u0639\u0636 \u0627\u0644\u062A\u0643\u0631\u0627\u0631 \u0641\u064A \u0627\u0644\u0635\u064A\u0627\u063A\u0629 \u064A\u0645\u0643\u0646 \u062A\u062D\u0633\u064A\u0646\u0647 \u0644\u0631\u0641\u0639 \u0645\u0633\u062A\u0648\u0649 \u0627\u0644\u0637\u0644\u0627\u0642\u0629.\n\n\u062E\u0637\u0631 \u0627\u0644\u0647\u0644\u0648\u0633\u0629 \u0645\u0646\u062E\u0641\u0636 \u0646\u0633\u0628\u064A\u0627\u064B \u2014 \u0644\u0645 \u062A\u064F\u0630\u0643\u0631 \u0645\u0639\u0644\u0648\u0645\u0627\u062A \u0645\u062E\u062A\u0644\u0642\u0629\u060C \u0644\u0643\u0646 \u0647\u0646\u0627\u0643 \u0628\u0639\u0636 \u0627\u0644\u062A\u0639\u0645\u064A\u0645\u0627\u062A \u0627\u0644\u062A\u064A \u0643\u0627\u0646 \u0645\u0646 \u0627\u0644\u0623\u0641\u0636\u0644 \u062F\u0639\u0645\u0647\u0627 \u0628\u0623\u0645\u062B\u0644\u0629 \u0645\u062D\u062F\u062F\u0629. \u0628\u0634\u0643\u0644 \u0639\u0627\u0645\u060C \u0627\u0644\u0627\u0633\u062A\u062C\u0627\u0628\u0629 \u062A\u0633\u062A\u062D\u0642 \u062A\u0642\u064A\u064A\u0645\u0627\u064B \u062C\u064A\u062F\u0627\u064B \u0645\u0639 \u0625\u0645\u0643\u0627\u0646\u064A\u0629 \u0627\u0644\u062A\u062D\u0633\u064A\u0646 \u0641\u064A \u062F\u0642\u0629 \u0627\u0644\u062A\u0641\u0627\u0635\u064A\u0644 \u0648\u062A\u0646\u0648\u0639 \u0627\u0644\u0623\u0633\u0644\u0648\u0628.'
     };
     renderResults(exampleData);
     showState('results');
@@ -361,11 +683,441 @@
   function clearExample() {
     document.getElementById('example-banner').classList.add('hidden');
     critiqueCard.classList.add('hidden');
+    strengthsWeaknessesCard.classList.add('hidden');
     showState('empty');
   }
 
   window.loadExample = loadExample;
   window.clearExample = clearExample;
+
+  /* ═══════════════════════════════════════════════ */
+  /* TEST SUITE TAB                                  */
+  /* ═══════════════════════════════════════════════ */
+  function renderCategoryGrid() {
+    while (categoryGrid.firstChild) categoryGrid.removeChild(categoryGrid.firstChild);
+    CATEGORIES.forEach(function(cat) {
+      var count = (datasetByCategory[cat.id] || []).length;
+      var card = document.createElement('div');
+      card.className = 'bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 cursor-pointer hover:shadow-md hover:border-primary/20 transition-all group';
+      card.addEventListener('click', function() { openCategory(cat.id); });
+
+      /* Icon container */
+      var iconWrap = document.createElement('div');
+      iconWrap.className = 'flex items-center gap-3 mb-4';
+      var iconBox = document.createElement('div');
+      iconBox.className = 'w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center group-hover:bg-primary transition-colors';
+      var icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined text-primary group-hover:text-on-primary transition-colors';
+      icon.textContent = cat.icon;
+      iconBox.appendChild(icon);
+      var textBox = document.createElement('div');
+      var nameEl = document.createElement('h3');
+      nameEl.className = 'text-sm font-semibold text-on-surface';
+      nameEl.textContent = cat.name;
+      var nameArEl = document.createElement('p');
+      nameArEl.className = 'text-xs text-on-surface-variant arabic-text';
+      nameArEl.dir = 'rtl';
+      nameArEl.textContent = cat.name_ar;
+      textBox.appendChild(nameEl);
+      textBox.appendChild(nameArEl);
+      iconWrap.appendChild(iconBox);
+      iconWrap.appendChild(textBox);
+
+      /* Footer */
+      var footer = document.createElement('div');
+      footer.className = 'flex items-center justify-between';
+      var countEl = document.createElement('span');
+      countEl.className = 'text-xs text-on-surface-variant';
+      countEl.textContent = count + ' test case' + (count !== 1 ? 's' : '');
+      var arrowEl = document.createElement('span');
+      arrowEl.className = 'material-symbols-outlined text-base text-outline group-hover:text-primary transition-colors';
+      arrowEl.textContent = 'arrow_forward';
+      footer.appendChild(countEl);
+      footer.appendChild(arrowEl);
+
+      card.appendChild(iconWrap);
+      card.appendChild(footer);
+      categoryGrid.appendChild(card);
+    });
+  }
+
+  function openCategory(catId) {
+    currentCategory = catId;
+    var cat = CATEGORIES.find(function(c) { return c.id === catId; });
+    if (!cat) return;
+
+    suiteCategories.classList.add('hidden');
+    suiteDetail.classList.remove('hidden');
+
+    detailCatIcon.textContent = cat.icon;
+    detailCatName.textContent = cat.name;
+    detailCatNameAr.textContent = cat.name_ar;
+
+    var cases = datasetByCategory[catId] || [];
+    while (suiteCasesList.firstChild) suiteCasesList.removeChild(suiteCasesList.firstChild);
+
+    var diffColors = {
+      easy:   'bg-green-100 text-green-700',
+      medium: 'bg-amber-100 text-amber-700',
+      hard:   'bg-red-100 text-red-700'
+    };
+
+    cases.forEach(function(tc) {
+      var card = document.createElement('div');
+      card.className = 'bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/10 flex flex-col gap-3';
+
+      /* Header row */
+      var header = document.createElement('div');
+      header.className = 'flex items-start justify-between gap-3';
+      var titleBox = document.createElement('div');
+      titleBox.className = 'flex-1';
+      var titleEn = document.createElement('h4');
+      titleEn.className = 'text-sm font-semibold text-on-surface';
+      titleEn.textContent = tc.title;
+      var titleAr = document.createElement('p');
+      titleAr.className = 'text-xs text-on-surface-variant arabic-text mt-0.5';
+      titleAr.dir = 'rtl';
+      titleAr.textContent = tc.title_ar;
+      titleBox.appendChild(titleEn);
+      titleBox.appendChild(titleAr);
+      var badge = document.createElement('span');
+      badge.className = 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ' + (diffColors[tc.difficulty] || 'bg-slate-100 text-slate-700');
+      badge.textContent = tc.difficulty;
+      header.appendChild(titleBox);
+      header.appendChild(badge);
+
+      /* Prompt preview */
+      var promptEl = document.createElement('p');
+      promptEl.className = 'text-xs text-on-surface-variant leading-relaxed line-clamp-3 arabic-text';
+      promptEl.dir = 'rtl';
+      promptEl.textContent = tc.prompt;
+
+      /* Run button */
+      var btnRow = document.createElement('div');
+      btnRow.className = 'flex items-center justify-end';
+      var runBtn = document.createElement('button');
+      runBtn.className = 'flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline transition-colors';
+      var runIcon = document.createElement('span');
+      runIcon.className = 'material-symbols-outlined text-sm';
+      runIcon.textContent = 'play_arrow';
+      var runLabel = document.createElement('span');
+      runLabel.textContent = 'Run this test';
+      runBtn.appendChild(runIcon);
+      runBtn.appendChild(runLabel);
+      (function(id) {
+        runBtn.addEventListener('click', function() { runTestCase(id); });
+      })(tc.id);
+      btnRow.appendChild(runBtn);
+
+      card.appendChild(header);
+      card.appendChild(promptEl);
+      card.appendChild(btnRow);
+      suiteCasesList.appendChild(card);
+    });
+  }
+  window.openCategory = openCategory;
+
+  function backToCategories() {
+    currentCategory = null;
+    suiteCategories.classList.remove('hidden');
+    suiteDetail.classList.add('hidden');
+  }
+  window.backToCategories = backToCategories;
+
+  function runTestCase(tcId) {
+    var tc = DATASET.find(function(d) { return d.id === tcId; });
+    if (!tc) return;
+
+    if (tc.ai_input) {
+      aiInput.value = tc.ai_input;
+    } else {
+      aiInput.value = '';
+    }
+    refInput.value = tc.reference || '';
+
+    showTab('evaluate');
+    showState('empty');
+    critiqueCard.classList.add('hidden');
+    strengthsWeaknessesCard.classList.add('hidden');
+    document.getElementById('example-banner').classList.add('hidden');
+
+    if (!tc.ai_input) {
+      aiInput.focus();
+      aiInput.setAttribute('placeholder', tc.prompt + '\n\n\u0627\u0644\u0635\u0642 \u0627\u0633\u062A\u062C\u0627\u0628\u0629 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064A \u0647\u0646\u0627...');
+    } else {
+      btnEval.click();
+    }
+  }
+
+  function runAllInCategory() {
+    if (!currentCategory) return;
+    var cases = datasetByCategory[currentCategory] || [];
+    if (cases.length === 0) return;
+
+    runAllQueue = cases.filter(function(tc) { return tc.ai_input; }).map(function(tc) { return tc.id; });
+    if (runAllQueue.length === 0) {
+      alert('No auto-runnable test cases in this category (test cases need ai_input).');
+      return;
+    }
+    runAllRunning = true;
+    runNextInQueue();
+  }
+  window.runAllInCategory = runAllInCategory;
+
+  function runNextInQueue() {
+    if (runAllQueue.length === 0) {
+      runAllRunning = false;
+      return;
+    }
+    var nextId = runAllQueue.shift();
+    var tc = DATASET.find(function(d) { return d.id === nextId; });
+    if (!tc || !tc.ai_input) { runNextInQueue(); return; }
+
+    aiInput.value = tc.ai_input;
+    refInput.value = tc.reference || '';
+    showTab('evaluate');
+
+    (async function() {
+      showState('loading');
+      critiqueCard.classList.add('hidden');
+      strengthsWeaknessesCard.classList.add('hidden');
+      try {
+        var res = await fetch('api/evaluate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+          body: JSON.stringify({ ai_response: tc.ai_input, reference: tc.reference })
+        });
+        var data = await res.json();
+        if (res.ok) {
+          renderResults(data);
+          showState('results');
+          saveToHistory(data);
+        }
+      } catch(e) {}
+      setTimeout(function() { runNextInQueue(); }, 1500);
+    })();
+  }
+
+  /* ═══════════════════════════════════════════════ */
+  /* HISTORY TAB                                     */
+  /* ═══════════════════════════════════════════════ */
+  function renderHistory() {
+    var history = getHistory();
+    var historyEmpty = document.getElementById('history-empty');
+    var historyList  = document.getElementById('history-list');
+    var btnClear     = document.getElementById('btn-clear-history');
+
+    if (history.length === 0) {
+      historyEmpty.classList.remove('hidden');
+      historyList.classList.add('hidden');
+      btnClear.classList.add('hidden');
+      return;
+    }
+
+    historyEmpty.classList.add('hidden');
+    historyList.classList.remove('hidden');
+    btnClear.classList.remove('hidden');
+    while (historyList.firstChild) historyList.removeChild(historyList.firstChild);
+
+    var verdictColors = {
+      'Highly Accurate': 'bg-green-100 text-green-700',
+      'Good':            'bg-blue-100 text-blue-700',
+      'Fair':            'bg-amber-100 text-amber-700',
+      'Poor':            'bg-red-100 text-red-700'
+    };
+
+    history.forEach(function(entry, idx) {
+      var date = new Date(entry.date);
+      var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
+                    ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      var score = entry.total_score || 0;
+      var verdict = entry.verdict || 'Fair';
+      var vClass = verdictColors[verdict] || 'bg-slate-100 text-slate-700';
+
+      var row = document.createElement('div');
+      row.className = 'bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden';
+
+      /* Summary row (clickable) */
+      var summary = document.createElement('div');
+      summary.className = 'flex items-center gap-4 p-4 cursor-pointer hover:bg-surface-container-low transition-colors';
+      summary.setAttribute('data-expand', String(idx));
+
+      var scoreBox = document.createElement('div');
+      scoreBox.className = 'w-12 h-12 rounded-lg bg-primary flex items-center justify-center text-on-primary font-bold text-lg shrink-0';
+      scoreBox.textContent = score;
+
+      var infoBox = document.createElement('div');
+      infoBox.className = 'flex-1 min-w-0';
+
+      var metaRow = document.createElement('div');
+      metaRow.className = 'flex items-center gap-2 mb-1';
+      var dateEl = document.createElement('span');
+      dateEl.className = 'text-sm font-semibold text-on-surface';
+      dateEl.textContent = dateStr;
+      var verdictEl = document.createElement('span');
+      verdictEl.className = 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ' + vClass;
+      verdictEl.textContent = verdict;
+      metaRow.appendChild(dateEl);
+      metaRow.appendChild(verdictEl);
+
+      var snippetEl = document.createElement('p');
+      snippetEl.className = 'text-xs text-on-surface-variant truncate arabic-text';
+      snippetEl.dir = 'rtl';
+      snippetEl.textContent = entry.ai_snippet || '';
+
+      infoBox.appendChild(metaRow);
+      infoBox.appendChild(snippetEl);
+
+      var expandIcon = document.createElement('span');
+      expandIcon.className = 'material-symbols-outlined text-outline text-base expand-icon shrink-0';
+      expandIcon.textContent = 'expand_more';
+
+      summary.appendChild(scoreBox);
+      summary.appendChild(infoBox);
+      summary.appendChild(expandIcon);
+
+      /* Expand panel */
+      var panel = document.createElement('div');
+      panel.className = 'hidden border-t border-outline-variant/10 p-4 bg-surface-container-low';
+      panel.id = 'history-expand-' + idx;
+      buildHistoryDetailDOM(panel, entry);
+
+      summary.addEventListener('click', function() {
+        var icon = this.querySelector('.expand-icon');
+        if (panel.classList.contains('hidden')) {
+          panel.classList.remove('hidden');
+          icon.textContent = 'expand_less';
+        } else {
+          panel.classList.add('hidden');
+          icon.textContent = 'expand_more';
+        }
+      });
+
+      row.appendChild(summary);
+      row.appendChild(panel);
+      historyList.appendChild(row);
+    });
+  }
+
+  function buildHistoryDetailDOM(container, entry) {
+    var r = entry.full_result || {};
+
+    /* Metrics grid */
+    var grid = document.createElement('div');
+    grid.className = 'grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4';
+    var metrics = [
+      ['Correctness', r.correctness],
+      ['Grammar', r.grammar],
+      ['Fluency', r.fluency],
+      ['Terminology', r.terminology_accuracy],
+      ['Dialect', r.dialect_awareness],
+      ['Cultural', r.cultural_appropriateness],
+      ['Hallucination', r.hallucination_risk]
+    ];
+    metrics.forEach(function(m) {
+      var cell = document.createElement('div');
+      cell.className = 'text-center p-2 rounded-lg bg-surface-container';
+      var val = document.createElement('div');
+      val.className = 'text-lg font-bold text-on-surface';
+      val.textContent = m[1] || 0;
+      var lbl = document.createElement('div');
+      lbl.className = 'text-[10px] text-on-surface-variant uppercase tracking-wider';
+      lbl.textContent = m[0];
+      cell.appendChild(val);
+      cell.appendChild(lbl);
+      grid.appendChild(cell);
+    });
+    container.appendChild(grid);
+
+    /* Detected dialect */
+    if (r.detected_dialect) {
+      var dialectRow = document.createElement('div');
+      dialectRow.className = 'mb-3';
+      var dialectTag = document.createElement('span');
+      dialectTag.className = 'text-[10px] font-bold uppercase tracking-wider bg-primary-container text-on-primary-container px-2 py-0.5 rounded';
+      dialectTag.textContent = 'Dialect: ' + r.detected_dialect;
+      dialectRow.appendChild(dialectTag);
+      container.appendChild(dialectRow);
+    }
+
+    /* Strengths */
+    if (r.strengths && r.strengths.length) {
+      var sSection = document.createElement('div');
+      sSection.className = 'mb-3';
+      var sLabel = document.createElement('div');
+      sLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-green-700 mb-1';
+      sLabel.textContent = 'Strengths';
+      sSection.appendChild(sLabel);
+      var sList = document.createElement('ul');
+      sList.className = 'arabic-text text-xs text-on-surface-variant space-y-1';
+      sList.dir = 'rtl';
+      r.strengths.forEach(function(s) {
+        var li = document.createElement('li');
+        li.className = 'flex items-start gap-1.5';
+        var dot = document.createElement('span');
+        dot.className = 'mt-1 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0';
+        var txt = document.createElement('span');
+        txt.textContent = s;
+        li.appendChild(dot);
+        li.appendChild(txt);
+        sList.appendChild(li);
+      });
+      sSection.appendChild(sList);
+      container.appendChild(sSection);
+    }
+
+    /* Weaknesses */
+    if (r.weaknesses && r.weaknesses.length) {
+      var wSection = document.createElement('div');
+      wSection.className = 'mb-3';
+      var wLabel = document.createElement('div');
+      wLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-red-700 mb-1';
+      wLabel.textContent = 'Weaknesses';
+      wSection.appendChild(wLabel);
+      var wList = document.createElement('ul');
+      wList.className = 'arabic-text text-xs text-on-surface-variant space-y-1';
+      wList.dir = 'rtl';
+      r.weaknesses.forEach(function(s) {
+        var li = document.createElement('li');
+        li.className = 'flex items-start gap-1.5';
+        var dot = document.createElement('span');
+        dot.className = 'mt-1 w-1.5 h-1.5 rounded-full bg-red-500 shrink-0';
+        var txt = document.createElement('span');
+        txt.textContent = s;
+        li.appendChild(dot);
+        li.appendChild(txt);
+        wList.appendChild(li);
+      });
+      wSection.appendChild(wList);
+      container.appendChild(wSection);
+    }
+
+    /* AI snippet preview */
+    if (entry.ai_snippet) {
+      var previewBox = document.createElement('div');
+      previewBox.className = 'mt-3 p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/10';
+      var previewLabel = document.createElement('div');
+      previewLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1';
+      previewLabel.textContent = 'AI Response Preview';
+      var previewText = document.createElement('p');
+      previewText.className = 'arabic-text text-xs text-on-surface-variant';
+      previewText.dir = 'rtl';
+      previewText.textContent = entry.ai_snippet + '...';
+      previewBox.appendChild(previewLabel);
+      previewBox.appendChild(previewText);
+      container.appendChild(previewBox);
+    }
+  }
+
+  function clearHistory() {
+    if (!confirm('Clear all evaluation history?')) return;
+    try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
+    updateHistoryCount();
+    renderHistory();
+  }
+  window.clearHistory = clearHistory;
+
 })();
 </script>
 {% endblock %}
