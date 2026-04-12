@@ -102,7 +102,49 @@ tailwind.config = {
   .section-label { font-size:11px;font-weight:600;color:#636366;text-transform:uppercase;letter-spacing:.06em; }
   .sys-label, .text-sys-label { color: #1C1C1E; }
   @media (max-width: 768px) {
-    .shrink-0.w-64, aside.w-64 { display: none !important; }
+    /* Hide fixed sidebars */
+    aside.fixed, aside.w-64, aside.w-72, .shrink-0.w-64 {
+      display: none !important;
+    }
+    /* Remove sidebar margin from main content */
+    main.ml-64, main.ml-72, .ml-64, .ml-72 {
+      margin-left: 0 !important;
+    }
+    /* Fix header padding */
+    header.fixed, nav.fixed {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    /* Stack 12-col grids */
+    .grid-cols-12 > .col-span-8,
+    .grid-cols-12 > .col-span-4 {
+      grid-column: span 12 !important;
+    }
+    /* Stack 2-col grids */
+    .grid-cols-2 {
+      grid-template-columns: 1fr !important;
+    }
+    /* Fix overflowing text */
+    .max-w-3xl, .max-w-4xl, .max-w-5xl, .max-w-7xl {
+      max-width: 100% !important;
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+    /* Reduce padding on sections */
+    section.p-8, div.p-8 {
+      padding: 16px !important;
+    }
+    /* Fix hero text sizes */
+    .text-4xl, .text-5xl {
+      font-size: 1.75rem !important;
+      line-height: 1.2 !important;
+    }
+    /* Flex wrapping */
+    .flex.items-center.gap-3,
+    .flex.items-center.gap-4 {
+      flex-wrap: wrap;
+    }
+    /* Flex auto for main content */
     .flex-1.overflow-hidden { flex: 1 1 auto; min-width: 0; }
   }
   .hub-back-btn {
