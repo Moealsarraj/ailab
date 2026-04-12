@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Prompt Bench — AI Prompt Evaluator{% endblock %}
+{% block title %}Prompt Bench - AI Prompt Evaluator{% endblock %}
 
 {% block content %}
 
@@ -138,7 +138,7 @@
         <p class="text-xs text-sys-label-2 leading-relaxed">
           <span class="font-semibold" style="color:#007AFF;">How to use:</span>
           Write your system prompt above. Switch to Test Cases to add inputs and expected outputs. Click
-          <span class="font-semibold">Execute Run</span> — the AI evaluates each case and an independent judge scores the output.
+          <span class="font-semibold">Execute Run</span> - the AI evaluates each case and an independent judge scores the output.
         </p>
       </div>
     </div>
@@ -377,7 +377,7 @@
       <p class="text-xs font-semibold" style="color:#34C759; letter-spacing:-0.01em;">All Cases Passed</p>
     </div>
 
-    {# Recommend Fixes button — shown after a run #}
+    {# Recommend Fixes button - shown after a run #}
     <div id="recommend-btn-wrap" class="hidden pt-1" style="border-top:1px solid rgba(60,60,67,0.08);">
       <button onclick="getRecommendations()" id="recommend-btn"
               class="w-full btn-primary justify-center text-xs py-2.5">
@@ -386,7 +386,7 @@
       </button>
     </div>
 
-    {# Recommendations panel — shown after AI responds #}
+    {# Recommendations panel - shown after AI responds #}
     <div id="recommendations-section" class="hidden flex flex-col gap-3">
       <div class="flex items-center justify-between">
         <p class="section-label">AI Recommendations</p>
@@ -436,7 +436,7 @@
     {# Format hint #}
     <div class="px-5 py-3" style="background:rgba(0,122,255,0.04); border-bottom:1px solid rgba(0,122,255,0.10);">
       <p class="text-[11px] text-sys-label-2 leading-relaxed">
-        Paste one case per line — columns separated by <code class="font-mono bg-sys-fill px-1 rounded">|</code>.
+        Paste one case per line - columns separated by <code class="font-mono bg-sys-fill px-1 rounded">|</code>.
         Format: <code class="font-mono bg-sys-fill px-1 rounded">Label | User Message | Expected Output</code><br/>
         Also accepts markdown tables (with header row). Existing cases are kept.
       </p>
@@ -696,7 +696,7 @@ function renderResults(data) {
 
     const idEl = document.createElement('span');
     idEl.className = 'text-[11px] text-sys-label-2';
-    idEl.textContent = r.id + (r.label ? ' — ' + r.label : '');
+    idEl.textContent = r.id + (r.label ? ' - ' + r.label : '');
 
     const scoreEl = document.createElement('span');
     scoreEl.className = 'text-[11px] font-semibold font-mono';
@@ -732,7 +732,7 @@ function renderResults(data) {
     const idSpan = document.createElement('span');
     idSpan.className = 'text-xs font-semibold font-mono';
     idSpan.style.color = '#007AFF';
-    idSpan.textContent = r.id + (r.label ? ' — ' + r.label : '');
+    idSpan.textContent = r.id + (r.label ? ' - ' + r.label : '');
 
     const noteSpan = document.createElement('span');
     noteSpan.className = 'text-[11px] italic text-sys-label-3';
@@ -781,7 +781,7 @@ function renderResults(data) {
   document.getElementById('run-timestamp').textContent = 'Last run ' + ts;
   document.getElementById('run-timestamp').classList.remove('hidden');
   document.getElementById('footer-sync').classList.remove('hidden');
-  setFooter('Done — ' + data.total_cases + ' cases evaluated', '#34C759');
+  setFooter('Done - ' + data.total_cases + ' cases evaluated', '#34C759');
 
   // Show recommend button; reset any previous recommendations
   document.getElementById('recommend-btn-wrap').classList.remove('hidden');
@@ -867,7 +867,7 @@ async function getRecommendations() {
     if (data.all_passed) {
       const msg = document.createElement('p');
       msg.className = 'text-xs text-sys-label-2 leading-relaxed py-2';
-      msg.textContent = 'All cases passed — no fixes needed. Your prompt looks solid.';
+      msg.textContent = 'All cases passed - no fixes needed. Your prompt looks solid.';
       list.appendChild(msg);
       setFooter('No fixes needed', '#34C759');
     } else {
@@ -937,7 +937,7 @@ function applyImprovedPrompt() {
   if (!_improvedPrompt) return;
   document.getElementById('system-prompt').value = _improvedPrompt;
   switchTab('prompts');
-  setFooter('Improved prompt applied — re-run to verify', '#007AFF');
+  setFooter('Improved prompt applied - re-run to verify', '#007AFF');
   document.getElementById('apply-btn').classList.add('hidden');
 }
 
@@ -1270,7 +1270,7 @@ function loadExample() {
         label: 'Refund Request',
         status: 'pass',
         score: 8.5,
-        actual_output: 'I understand your frustration with the billing issue. Let me look into your account right away. I can see the duplicate charge and I\'ve initiated a refund request — you should see it reflected within 3-5 business days.',
+        actual_output: 'I understand your frustration with the billing issue. Let me look into your account right away. I can see the duplicate charge and I\'ve initiated a refund request - you should see it reflected within 3-5 business days.',
         notes: 'Correctly follows escalation protocol and avoids unauthorized promises.'
       },
       {

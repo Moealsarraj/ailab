@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Arabic Bench — Arabic NLP Evaluation Platform{% endblock %}
+{% block title %}Arabic Bench - Arabic NLP Evaluation Platform{% endblock %}
 
 {% block content %}
 <div class="flex flex-col h-screen overflow-hidden">
@@ -353,7 +353,7 @@
               <div id="deterministic-card" class="hidden bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-5">
                 <div class="flex items-center justify-between">
                   <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Deterministic Metrics</h4>
-                  <span class="text-[10px] font-medium text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">No AI — computed instantly</span>
+                  <span class="text-[10px] font-medium text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">No AI - computed instantly</span>
                 </div>
 
                 <!-- BLEU Score -->
@@ -838,7 +838,7 @@
       var d = new Date(run.startTime);
       var cats = Object.keys(run.categories);
       var label = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-      label += ' — ' + run.entries.length + ' test' + (run.entries.length > 1 ? 's' : '');
+      label += ' - ' + run.entries.length + ' test' + (run.entries.length > 1 ? 's' : '');
       if (cats.length > 0 && cats.length <= 3) label += ' (' + cats.join(', ') + ')';
       opt.textContent = label;
       filterEl.appendChild(opt);
@@ -1631,7 +1631,7 @@
   DATASET.forEach(function(tc) {
     var opt = document.createElement('option');
     opt.value = tc.id;
-    opt.textContent = tc.title + ' — ' + (tc.prompt || '').substring(0, 60);
+    opt.textContent = tc.title + ' - ' + (tc.prompt || '').substring(0, 60);
     benchCaseSelect.appendChild(opt);
   });
 
