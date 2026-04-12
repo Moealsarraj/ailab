@@ -44,6 +44,11 @@
           <span class="material-symbols-outlined text-[20px]">leaderboard</span>
           Benchmark
         </button>
+        <button onclick="showTab('leaderboard')" id="nav-leaderboard"
+          class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
+          <span class="material-symbols-outlined text-[20px]">military_tech</span>
+          Leaderboard
+        </button>
         <button onclick="showTab('history')" id="nav-history"
           class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
           <span class="material-symbols-outlined text-[20px]">history</span>
@@ -344,6 +349,54 @@
                 </div>
               </div>
 
+              <!-- Deterministic Metrics -->
+              <div id="deterministic-card" class="hidden bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-5">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Deterministic Metrics</h4>
+                  <span class="text-[10px] font-medium text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded">No AI — computed instantly</span>
+                </div>
+
+                <!-- BLEU Score -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">BLEU Score</span>
+                    <span id="label-det-bleu" class="text-xs font-bold" style="color:#6366f1;">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-det-bleu" class="h-full rounded-full transition-all duration-700" style="width:0%; background:#6366f1;"></div>
+                  </div>
+                </div>
+
+                <!-- Word Overlap (F1) -->
+                <div class="space-y-1.5">
+                  <div class="flex justify-between items-end">
+                    <span class="text-sm font-semibold">Word Overlap (F1)</span>
+                    <span id="label-det-word-overlap" class="text-xs font-bold" style="color:#6366f1;">--</span>
+                  </div>
+                  <div class="h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                    <div id="bar-det-word-overlap" class="h-full rounded-full transition-all duration-700" style="width:0%; background:#6366f1;"></div>
+                  </div>
+                </div>
+
+                <!-- Exact Match -->
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold">Exact Match</span>
+                  <span id="det-exact-match" class="text-base">--</span>
+                </div>
+
+                <!-- Length Ratio -->
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold">Length Ratio</span>
+                  <span id="det-length-ratio" class="text-sm font-bold" style="color:#6366f1;">--</span>
+                </div>
+
+                <!-- Arabic Char % -->
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-semibold">Arabic Char %</span>
+                  <span id="det-arabic-char" class="text-[11px] font-bold text-white px-2 py-0.5 rounded" style="background:#6366f1;">--</span>
+                </div>
+              </div>
+
             </div><!-- /results -->
           </div>
 
@@ -511,6 +564,56 @@
         </div>
       </div><!-- /tab-benchmark -->
 
+      <!-- TAB: LEADERBOARD -->
+      <div id="tab-leaderboard" class="hidden max-w-7xl mx-auto">
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-on-surface tracking-tight">Model Leaderboard</h2>
+          <p class="text-sm text-on-surface-variant mt-1">Aggregated performance across all benchmark runs</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="lb-empty" class="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-5xl text-outline mb-4" style="font-variation-settings:'FILL' 1;">military_tech</span>
+          <p class="text-sm font-medium">No benchmark data yet</p>
+          <p class="text-xs text-outline mt-1">Run a benchmark from the Benchmark tab to populate the leaderboard.</p>
+          <button onclick="showTab('benchmark')" class="mt-4 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-dim transition-all">
+            Go to Benchmark
+          </button>
+        </div>
+
+        <!-- Leaderboard content -->
+        <div id="lb-content" class="hidden flex flex-col gap-6">
+          <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="border-b border-outline-variant/10 text-on-surface-variant">
+                    <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider w-16">Rank</th>
+                    <th class="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Provider</th>
+                    <th class="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Model</th>
+                    <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Avg AI Score</th>
+                    <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Avg BLEU</th>
+                    <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Avg Word Overlap</th>
+                    <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Runs</th>
+                    <th class="text-right px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Avg Time</th>
+                  </tr>
+                </thead>
+                <tbody id="lb-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-on-surface-variant">Scores aggregate across all benchmark runs. Run more benchmarks to improve accuracy.</p>
+            <button onclick="clearLeaderboardData()" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+              <span class="material-symbols-outlined text-base">delete</span>
+              Clear Leaderboard Data
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /tab-leaderboard -->
+
       <!-- TAB 4: HISTORY -->
       <div id="tab-history" class="hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-6">
@@ -591,16 +694,18 @@
   var weaknessesList = document.getElementById('weaknesses-list');
 
   /* ─── DOM: Tabs ─── */
-  var tabDashboard = document.getElementById('tab-dashboard');
-  var tabEvaluate  = document.getElementById('tab-evaluate');
-  var tabSuite     = document.getElementById('tab-suite');
-  var tabBenchmark = document.getElementById('tab-benchmark');
-  var tabHistory   = document.getElementById('tab-history');
+  var tabDashboard    = document.getElementById('tab-dashboard');
+  var tabEvaluate     = document.getElementById('tab-evaluate');
+  var tabSuite        = document.getElementById('tab-suite');
+  var tabBenchmark    = document.getElementById('tab-benchmark');
+  var tabLeaderboard  = document.getElementById('tab-leaderboard');
+  var tabHistory      = document.getElementById('tab-history');
   var navDashboard = document.getElementById('nav-dashboard');
-  var navEvaluate  = document.getElementById('nav-evaluate');
-  var navSuite     = document.getElementById('nav-suite');
-  var navBenchmark = document.getElementById('nav-benchmark');
-  var navHistory   = document.getElementById('nav-history');
+  var navEvaluate     = document.getElementById('nav-evaluate');
+  var navSuite        = document.getElementById('nav-suite');
+  var navBenchmark    = document.getElementById('nav-benchmark');
+  var navLeaderboard  = document.getElementById('nav-leaderboard');
+  var navHistory      = document.getElementById('nav-history');
 
   /* ─── DOM: Test Suite ─── */
   var suiteCategories = document.getElementById('suite-categories');
@@ -642,12 +747,14 @@
     tabEvaluate.classList.add('hidden');
     tabSuite.classList.add('hidden');
     tabBenchmark.classList.add('hidden');
+    tabLeaderboard.classList.add('hidden');
     tabHistory.classList.add('hidden');
 
     navDashboard.className = NAV_DEFAULT;
     navEvaluate.className  = NAV_DEFAULT;
     navSuite.className     = NAV_DEFAULT;
     navBenchmark.className = NAV_DEFAULT;
+    navLeaderboard.className = NAV_DEFAULT;
     navHistory.className   = NAV_DEFAULT;
 
     if (tabName === 'dashboard') {
@@ -664,6 +771,10 @@
     } else if (tabName === 'benchmark') {
       tabBenchmark.classList.remove('hidden');
       navBenchmark.className = NAV_ACTIVE;
+    } else if (tabName === 'leaderboard') {
+      tabLeaderboard.classList.remove('hidden');
+      navLeaderboard.className = NAV_ACTIVE;
+      refreshLeaderboard();
     } else if (tabName === 'history') {
       tabHistory.classList.remove('hidden');
       navHistory.className = NAV_ACTIVE;
@@ -1120,6 +1231,36 @@
         critiqueText.appendChild(p);
       });
       critiqueCard.classList.remove('hidden');
+    }
+
+    /* ─── Deterministic Metrics ─── */
+    var detCard = document.getElementById('deterministic-card');
+    var det = data.deterministic;
+    if (det) {
+      detCard.classList.remove('hidden');
+
+      var bleu = Math.min(100, Math.max(0, det.bleu_score || 0));
+      document.getElementById('bar-det-bleu').style.width = bleu + '%';
+      document.getElementById('label-det-bleu').textContent = bleu.toFixed(1) + '%';
+
+      var wordOv = Math.min(100, Math.max(0, det.word_overlap || 0));
+      document.getElementById('bar-det-word-overlap').style.width = wordOv + '%';
+      document.getElementById('label-det-word-overlap').textContent = wordOv.toFixed(1) + '%';
+
+      var exactEl = document.getElementById('det-exact-match');
+      if (det.exact_match) {
+        exactEl.innerHTML = '<span class="material-symbols-outlined text-green-600" style="font-variation-settings:\'FILL\' 1;">check_circle</span>';
+      } else {
+        exactEl.innerHTML = '<span class="material-symbols-outlined text-red-500" style="font-variation-settings:\'FILL\' 1;">cancel</span>';
+      }
+
+      var lr = det.length_ratio != null ? det.length_ratio : 0;
+      document.getElementById('det-length-ratio').textContent = lr.toFixed(2);
+
+      var acr = det.arabic_char_ratio != null ? det.arabic_char_ratio : 0;
+      document.getElementById('det-arabic-char').textContent = acr.toFixed(1) + '%';
+    } else {
+      detCard.classList.add('hidden');
     }
   }
 
@@ -1622,6 +1763,13 @@
       }
       renderBenchResults(data);
       showBenchState('results');
+
+      /* Save to benchmark history for leaderboard */
+      try {
+        var benchHistory = JSON.parse(localStorage.getItem('arabic_bench_benchmark_history') || '[]');
+        benchHistory.push({ date: new Date().toISOString(), results: data.results });
+        localStorage.setItem('arabic_bench_benchmark_history', JSON.stringify(benchHistory));
+      } catch(e) {}
     } catch(e) {
       clearInterval(progInterval);
       showBenchState('error');
@@ -2076,6 +2224,156 @@
     renderHistory();
   }
   window.clearHistory = clearHistory;
+
+  /* ═══════════════════════════════════════════════ */
+  /* LEADERBOARD TAB                                 */
+  /* ═══════════════════════════════════════════════ */
+  var BENCH_HISTORY_KEY = 'arabic_bench_benchmark_history';
+
+  function refreshLeaderboard() {
+    var lbEmpty   = document.getElementById('lb-empty');
+    var lbContent = document.getElementById('lb-content');
+    var lbBody    = document.getElementById('lb-table-body');
+
+    var raw;
+    try { raw = JSON.parse(localStorage.getItem(BENCH_HISTORY_KEY) || '[]'); } catch(e) { raw = []; }
+
+    if (!raw.length) {
+      lbEmpty.classList.remove('hidden');
+      lbContent.classList.add('hidden');
+      return;
+    }
+
+    /* Aggregate per model (keyed by provider + model) */
+    var models = {};
+    raw.forEach(function(run) {
+      (run.results || []).forEach(function(r) {
+        if (r.error) return;
+        var ev = r.evaluation || {};
+        var det = ev.deterministic || {};
+        var key = (r.provider || '') + '|||' + (r.model || '');
+        if (!models[key]) {
+          models[key] = {
+            provider: r.provider || '',
+            model: r.model || '',
+            totalScore: 0,
+            totalBleu: 0,
+            totalWordOverlap: 0,
+            totalTime: 0,
+            runs: 0
+          };
+        }
+        var m = models[key];
+        m.totalScore += (ev.total_score || 0);
+        m.totalBleu += (det.bleu_score || 0);
+        m.totalWordOverlap += (det.word_overlap || 0);
+        m.totalTime += (r.time_seconds || 0);
+        m.runs++;
+      });
+    });
+
+    var modelList = Object.keys(models).map(function(k) { return models[k]; });
+    if (modelList.length === 0) {
+      lbEmpty.classList.remove('hidden');
+      lbContent.classList.add('hidden');
+      return;
+    }
+
+    /* Sort by avg AI score descending */
+    modelList.sort(function(a, b) {
+      return (b.totalScore / b.runs) - (a.totalScore / a.runs);
+    });
+
+    lbEmpty.classList.add('hidden');
+    lbContent.classList.remove('hidden');
+
+    while (lbBody.firstChild) lbBody.removeChild(lbBody.firstChild);
+
+    var rankColors = ['#EAB308', '#9CA3AF', '#CD7F32'];
+    var rankBgs    = ['bg-amber-50', 'bg-slate-50', 'bg-orange-50'];
+    var medals     = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
+
+    modelList.forEach(function(m, idx) {
+      var avgScore = (m.totalScore / m.runs).toFixed(1);
+      var avgBleu  = (m.totalBleu / m.runs).toFixed(1);
+      var avgWord  = (m.totalWordOverlap / m.runs).toFixed(1);
+      var avgTime  = (m.totalTime / m.runs).toFixed(1);
+
+      var tr = document.createElement('tr');
+      tr.className = 'border-b border-outline-variant/5 ' + (idx < 3 ? (rankBgs[idx] || '') : '');
+
+      /* Rank */
+      var tdRank = document.createElement('td');
+      tdRank.className = 'px-4 py-3 text-center';
+      if (idx < 3) {
+        tdRank.innerHTML = '<span class="text-lg">' + medals[idx] + '</span>';
+      } else {
+        tdRank.innerHTML = '<span class="text-sm font-semibold text-on-surface-variant">' + (idx + 1) + '</span>';
+      }
+
+      /* Provider */
+      var tdProv = document.createElement('td');
+      tdProv.className = 'px-4 py-3 text-sm font-semibold text-on-surface capitalize';
+      tdProv.textContent = m.provider;
+
+      /* Model */
+      var tdModel = document.createElement('td');
+      tdModel.className = 'px-4 py-3 text-xs text-on-surface-variant';
+      tdModel.textContent = m.model;
+
+      /* Avg AI Score */
+      var tdScore = document.createElement('td');
+      tdScore.className = 'px-4 py-3 text-center';
+      var scoreBadge = document.createElement('span');
+      scoreBadge.className = 'text-sm font-bold px-2 py-0.5 rounded';
+      var avgNum = parseFloat(avgScore);
+      if (avgNum >= 86) { scoreBadge.className += ' bg-green-100 text-green-700'; }
+      else if (avgNum >= 71) { scoreBadge.className += ' bg-blue-100 text-blue-700'; }
+      else if (avgNum >= 51) { scoreBadge.className += ' bg-amber-100 text-amber-700'; }
+      else { scoreBadge.className += ' bg-red-100 text-red-700'; }
+      scoreBadge.textContent = avgScore;
+      tdScore.appendChild(scoreBadge);
+
+      /* Avg BLEU */
+      var tdBleu = document.createElement('td');
+      tdBleu.className = 'px-4 py-3 text-center text-xs font-medium text-on-surface';
+      tdBleu.textContent = avgBleu;
+
+      /* Avg Word Overlap */
+      var tdWord = document.createElement('td');
+      tdWord.className = 'px-4 py-3 text-center text-xs font-medium text-on-surface';
+      tdWord.textContent = avgWord;
+
+      /* Runs */
+      var tdRuns = document.createElement('td');
+      tdRuns.className = 'px-4 py-3 text-center text-xs font-medium text-on-surface-variant';
+      tdRuns.textContent = String(m.runs);
+
+      /* Avg Time */
+      var tdTime = document.createElement('td');
+      tdTime.className = 'px-4 py-3 text-right text-xs font-medium text-on-surface-variant';
+      tdTime.textContent = avgTime + 's';
+
+      tr.appendChild(tdRank);
+      tr.appendChild(tdProv);
+      tr.appendChild(tdModel);
+      tr.appendChild(tdScore);
+      tr.appendChild(tdBleu);
+      tr.appendChild(tdWord);
+      tr.appendChild(tdRuns);
+      tr.appendChild(tdTime);
+      lbBody.appendChild(tr);
+    });
+  }
+
+  window.refreshLeaderboard = refreshLeaderboard;
+
+  function clearLeaderboardData() {
+    if (!confirm('Clear all leaderboard data? This removes stored benchmark history.')) return;
+    try { localStorage.removeItem(BENCH_HISTORY_KEY); } catch(e) {}
+    refreshLeaderboard();
+  }
+  window.clearLeaderboardData = clearLeaderboardData;
 
 })();
 </script>

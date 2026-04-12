@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, request, jsonify
 from .bench import evaluate_arabic
 from .benchmark import run_benchmark
+from .metrics import compute_all_metrics
 from .dataset import CATEGORIES, DATASET, DATASET_BY_ID, DATASET_BY_CATEGORY
 from app.core.ai import get_available_providers
 
@@ -27,9 +28,15 @@ def api_evaluate():
     if len(ai_response) < 10 or len(reference) < 10:
         return jsonify({"error": "Both texts are too short to evaluate"}), 400
 
+    # Deterministic metrics (instant, no AI call)
+    det_metrics = compute_all_metrics(ai_response, reference)
+
+    # AI-based evaluation
     result = evaluate_arabic(ai_response, reference)
     if not result:
         return jsonify({"error": "Evaluation failed — please try again"}), 502
+
+    result["deterministic"] = det_metrics
     return jsonify(result)
 
 

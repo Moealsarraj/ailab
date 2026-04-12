@@ -7,6 +7,7 @@ import time
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from app.core.ai import get_available_providers, call_ai_single, call_ai_json
+from .metrics import compute_all_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,7 @@ def run_benchmark(prompt: str, reference: str, providers: list[str] | None = Non
             continue
 
         evaluation = _evaluate_response(resp["response"], reference)
+        det_metrics = compute_all_metrics(resp["response"], reference)
         results.append({
             "provider": resp["provider"],
             "model": _get_model_name(resp["provider"]),
@@ -135,6 +137,7 @@ def run_benchmark(prompt: str, reference: str, providers: list[str] | None = Non
             "time_seconds": resp["time_seconds"],
             "error": None,
             "evaluation": evaluation,
+            "deterministic": det_metrics,
         })
 
     # Step 3: Sort by score (highest first), errors last
