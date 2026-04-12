@@ -31,7 +31,7 @@ _FREE_MODELS = {
     "mistral":    "mistral-small-latest",
     "deepseek":   "deepseek-chat",
     "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    "cohere":     "command-r",
+    "cohere":     "command-r-08-2024",
 }
 _PREMIUM_MODELS = {
     "groq":       "llama-3.3-70b-versatile",
@@ -41,7 +41,7 @@ _PREMIUM_MODELS = {
     "openai":     "gpt-4o-mini",
     "deepseek":   "deepseek-chat",
     "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    "cohere":     "command-r",
+    "cohere":     "command-r-08-2024",
 }
 
 # ── Task-specific model routing ──
@@ -57,7 +57,7 @@ _TASK_MODELS = {
         "mistral":    "mistral-medium-latest",
         "deepseek":   "deepseek-chat",
         "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        "cohere":     "command-r",
+        "cohere":     "command-r7b-arabic-02-2025",
     },
     "code": {
         "groq":       "llama-3.3-70b-versatile",
@@ -66,7 +66,7 @@ _TASK_MODELS = {
         "mistral":    "mistral-medium-latest",
         "deepseek":   "deepseek-chat",
         "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        "cohere":     "command-r",
+        "cohere":     "command-r-08-2024",
     },
     "fast": {
         "groq":       "llama-3.1-8b-instant",
@@ -75,7 +75,7 @@ _TASK_MODELS = {
         "mistral":    "mistral-small-latest",
         "deepseek":   "deepseek-chat",
         "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-        "cohere":     "command-r",
+        "cohere":     "command-r-08-2024",
     },
 }
 
