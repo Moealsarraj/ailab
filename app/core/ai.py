@@ -18,8 +18,6 @@ _PROVIDER_URLS = {
     "openrouter": "https://openrouter.ai/api/v1/chat/completions",
     "mistral":    "https://api.mistral.ai/v1/chat/completions",
     "openai":     "https://api.openai.com/v1/chat/completions",
-    "deepseek":   "https://api.deepseek.com/chat/completions",
-    "together":   "https://api.together.xyz/v1/chat/completions",
     "cohere":     "https://api.cohere.com/v2/chat",
 }
 
@@ -29,8 +27,6 @@ _FREE_MODELS = {
     "cerebras":   "llama3.1-8b",
     "openrouter": "google/gemma-3-12b-it:free",
     "mistral":    "mistral-small-latest",
-    "deepseek":   "deepseek-chat",
-    "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
     "cohere":     "command-r-08-2024",
 }
 _PREMIUM_MODELS = {
@@ -39,8 +35,6 @@ _PREMIUM_MODELS = {
     "openrouter": "google/gemma-3-27b-it:free",
     "mistral":    "mistral-medium-latest",
     "openai":     "gpt-4o-mini",
-    "deepseek":   "deepseek-chat",
-    "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
     "cohere":     "command-r-08-2024",
 }
 
@@ -55,8 +49,6 @@ _TASK_MODELS = {
         "cerebras":   "qwen-3-235b-a22b-instruct-2507",
         "openrouter": "google/gemma-3-27b-it:free",
         "mistral":    "mistral-medium-latest",
-        "deepseek":   "deepseek-chat",
-        "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
         "cohere":     "command-r7b-arabic-02-2025",
     },
     "code": {
@@ -64,8 +56,6 @@ _TASK_MODELS = {
         "cerebras":   "qwen-3-235b-a22b-instruct-2507",
         "openrouter": "google/gemma-3-27b-it:free",
         "mistral":    "mistral-medium-latest",
-        "deepseek":   "deepseek-chat",
-        "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
         "cohere":     "command-r-08-2024",
     },
     "fast": {
@@ -73,18 +63,16 @@ _TASK_MODELS = {
         "cerebras":   "llama3.1-8b",
         "openrouter": "google/gemma-3-12b-it:free",
         "mistral":    "mistral-small-latest",
-        "deepseek":   "deepseek-chat",
-        "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
         "cohere":     "command-r-08-2024",
     },
 }
 
 # ── Task-specific provider priority ──
 _TASK_PRIORITY = {
-    "arabic":  ["cerebras", "deepseek", "groq", "together", "openrouter", "cohere", "mistral"],
-    "code":    ["deepseek", "groq", "cerebras", "together", "openrouter", "cohere", "mistral"],
-    "fast":    ["cerebras", "groq", "together", "deepseek", "openrouter", "cohere", "mistral"],
-    "default": ["groq", "cerebras", "deepseek", "together", "openrouter", "cohere", "mistral"],
+    "arabic":  ["cerebras", "groq", "openrouter", "cohere", "mistral"],
+    "code":    ["groq", "cerebras", "openrouter", "cohere", "mistral"],
+    "fast":    ["cerebras", "groq", "openrouter", "cohere", "mistral"],
+    "default": ["groq", "cerebras", "openrouter", "cohere", "mistral"],
 }
 
 _CHAIN_CFG = {
@@ -93,8 +81,6 @@ _CHAIN_CFG = {
     "openrouter": {"key_env": "OPENROUTER_API_KEY", "timeout": 45,
                    "extra": {"HTTP-Referer": "https://github.com/Moealsarraj", "X-Title": "AI Tools"}},
     "mistral":    {"key_env": "MISTRAL_API_KEY",    "timeout": 40, "extra": {}},
-    "deepseek":   {"key_env": "DEEPSEEK_API_KEY",   "timeout": 60, "extra": {}},
-    "together":   {"key_env": "TOGETHER_API_KEY",   "timeout": 45, "extra": {}},
     "cohere":     {"key_env": "COHERE_API_KEY",     "timeout": 45, "extra": {}},
 }
 
