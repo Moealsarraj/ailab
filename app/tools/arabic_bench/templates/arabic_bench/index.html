@@ -24,8 +24,13 @@
         </div>
       </div>
       <nav class="space-y-1">
-        <button onclick="showTab('evaluate')" id="nav-evaluate"
+        <button onclick="showTab('dashboard')" id="nav-dashboard"
           class="w-full text-left bg-white text-primary shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
+          <span class="material-symbols-outlined text-[20px]">space_dashboard</span>
+          Dashboard
+        </button>
+        <button onclick="showTab('evaluate')" id="nav-evaluate"
+          class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
           <span class="material-symbols-outlined text-[20px]">rate_review</span>
           Evaluate
         </button>
@@ -66,8 +71,59 @@
     <!-- Main -->
     <main class="flex-1 overflow-y-auto bg-surface p-8">
 
+      <!-- TAB 0: DASHBOARD -->
+      <div id="tab-dashboard" class="max-w-7xl mx-auto">
+
+        <!-- Row 1: Stat Cards -->
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-on-surface tracking-tight">Dashboard</h2>
+          <p class="text-sm text-on-surface-variant mt-1">Aggregate performance overview from your evaluation history</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="dash-empty" class="hidden flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
+          <span class="material-symbols-outlined text-5xl text-outline mb-4" style="font-variation-settings:'FILL' 1;">space_dashboard</span>
+          <p class="text-sm font-medium">No evaluations yet</p>
+          <p class="text-xs text-outline mt-1">Run some tests from the Test Suite to see your dashboard.</p>
+          <button onclick="showTab('suite')" class="mt-4 px-4 py-2 bg-primary text-on-primary text-sm font-semibold rounded-lg hover:bg-primary-dim transition-all">
+            Go to Test Suite
+          </button>
+        </div>
+
+        <!-- Dashboard content (hidden when empty) -->
+        <div id="dash-content" class="hidden flex flex-col gap-6">
+
+          <!-- Row 1: 4 stat cards -->
+          <div id="dash-stat-cards" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+
+          <!-- Row 2: 2 panels -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Score Distribution -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10">
+              <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5">Score Distribution</h4>
+              <div id="dash-score-dist" class="flex items-end justify-around gap-2" style="height:180px;"></div>
+            </div>
+            <!-- Category Performance -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10">
+              <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-5">Category Performance</h4>
+              <div id="dash-cat-perf" class="overflow-x-auto"></div>
+            </div>
+          </div>
+
+          <!-- Row 3: Recent Evaluations -->
+          <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10">
+            <div class="flex items-center justify-between mb-5">
+              <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Recent Evaluations</h4>
+              <button onclick="showTab('history')" class="text-xs font-semibold hover:underline transition-colors" style="color:#6366f1;">View All</button>
+            </div>
+            <div id="dash-recent" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3"></div>
+          </div>
+        </div>
+
+      </div><!-- /tab-dashboard -->
+
       <!-- TAB 1: EVALUATE -->
-      <div id="tab-evaluate" class="max-w-7xl mx-auto">
+      <div id="tab-evaluate" class="hidden max-w-7xl mx-auto">
         <div class="grid grid-cols-12 gap-8">
 
           <!-- Left Col: Input + Critique -->
@@ -526,10 +582,12 @@
   var weaknessesList = document.getElementById('weaknesses-list');
 
   /* ─── DOM: Tabs ─── */
+  var tabDashboard = document.getElementById('tab-dashboard');
   var tabEvaluate  = document.getElementById('tab-evaluate');
   var tabSuite     = document.getElementById('tab-suite');
   var tabBenchmark = document.getElementById('tab-benchmark');
   var tabHistory   = document.getElementById('tab-history');
+  var navDashboard = document.getElementById('nav-dashboard');
   var navEvaluate  = document.getElementById('nav-evaluate');
   var navSuite     = document.getElementById('nav-suite');
   var navBenchmark = document.getElementById('nav-benchmark');
@@ -550,7 +608,7 @@
   updateHistoryCount();
 
   /* ─── Current state ─── */
-  var currentTab = 'evaluate';
+  var currentTab = 'dashboard';
   var currentCategory = null;
   var runAllQueue = [];
   var runAllRunning = false;
@@ -571,17 +629,23 @@
   function showTab(tabName) {
     currentTab = tabName;
 
+    tabDashboard.classList.add('hidden');
     tabEvaluate.classList.add('hidden');
     tabSuite.classList.add('hidden');
     tabBenchmark.classList.add('hidden');
     tabHistory.classList.add('hidden');
 
+    navDashboard.className = NAV_DEFAULT;
     navEvaluate.className  = NAV_DEFAULT;
     navSuite.className     = NAV_DEFAULT;
     navBenchmark.className = NAV_DEFAULT;
     navHistory.className   = NAV_DEFAULT;
 
-    if (tabName === 'evaluate') {
+    if (tabName === 'dashboard') {
+      tabDashboard.classList.remove('hidden');
+      navDashboard.className = NAV_ACTIVE;
+      refreshDashboard();
+    } else if (tabName === 'evaluate') {
       tabEvaluate.classList.remove('hidden');
       navEvaluate.className = NAV_ACTIVE;
     } else if (tabName === 'suite') {
@@ -598,6 +662,305 @@
     }
   }
   window.showTab = showTab;
+
+  /* ═══════════════════════════════════════════════ */
+  /* DASHBOARD TAB                                   */
+  /* ═══════════════════════════════════════════════ */
+  var dashEmpty      = document.getElementById('dash-empty');
+  var dashContent    = document.getElementById('dash-content');
+  var dashStatCards  = document.getElementById('dash-stat-cards');
+  var dashScoreDist  = document.getElementById('dash-score-dist');
+  var dashCatPerf    = document.getElementById('dash-cat-perf');
+  var dashRecent     = document.getElementById('dash-recent');
+
+  function refreshDashboard() {
+    var history = getHistory();
+
+    if (history.length === 0) {
+      dashEmpty.classList.remove('hidden');
+      dashContent.classList.add('hidden');
+      return;
+    }
+
+    dashEmpty.classList.add('hidden');
+    dashContent.classList.remove('hidden');
+
+    /* ─── Row 1: Stat Cards ─── */
+    var totalEvals = history.length;
+    var sumScore = 0;
+    var bestScore = -1;
+    var bestTitle = '';
+    var categorySet = {};
+
+    history.forEach(function(entry) {
+      var s = entry.total_score || 0;
+      sumScore += s;
+      if (s > bestScore) {
+        bestScore = s;
+        bestTitle = entry.case_id || entry.category || '';
+      }
+      if (entry.category) {
+        categorySet[entry.category] = true;
+      }
+    });
+
+    var avgScore = totalEvals > 0 ? (sumScore / totalEvals).toFixed(1) : '0.0';
+    var categoriesCount = Object.keys(categorySet).length;
+
+    while (dashStatCards.firstChild) dashStatCards.removeChild(dashStatCards.firstChild);
+
+    var statData = [
+      { label: 'Total Evaluations', value: String(totalEvals), icon: 'assignment', color: '#6366f1' },
+      { label: 'Average Score', value: avgScore, icon: 'trending_up', color: '#0ea5e9' },
+      { label: 'Best Score', value: bestScore >= 0 ? String(bestScore) : '--', subtitle: bestTitle, icon: 'emoji_events', color: '#16a34a' },
+      { label: 'Categories Covered', value: String(categoriesCount), icon: 'category', color: '#f59e0b' }
+    ];
+
+    statData.forEach(function(stat) {
+      var card = document.createElement('div');
+      card.className = 'bg-surface-container-lowest rounded-xl p-5 border border-outline-variant/10 flex items-center gap-4';
+      card.style.borderLeft = '4px solid ' + stat.color;
+
+      var iconWrap = document.createElement('div');
+      iconWrap.className = 'w-10 h-10 rounded-lg flex items-center justify-center shrink-0';
+      iconWrap.style.background = stat.color + '15';
+      var icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined';
+      icon.style.color = stat.color;
+      icon.style.fontSize = '20px';
+      icon.textContent = stat.icon;
+      iconWrap.appendChild(icon);
+
+      var textBox = document.createElement('div');
+      textBox.className = 'min-w-0';
+      var valEl = document.createElement('div');
+      valEl.className = 'text-2xl font-bold text-on-surface leading-tight';
+      valEl.textContent = stat.value;
+      var lblEl = document.createElement('div');
+      lblEl.className = 'text-[11px] text-on-surface-variant uppercase tracking-wider font-medium';
+      lblEl.textContent = stat.label;
+      textBox.appendChild(valEl);
+      textBox.appendChild(lblEl);
+
+      if (stat.subtitle) {
+        var subEl = document.createElement('div');
+        subEl.className = 'text-[10px] text-on-surface-variant truncate';
+        subEl.textContent = stat.subtitle;
+        textBox.appendChild(subEl);
+      }
+
+      card.appendChild(iconWrap);
+      card.appendChild(textBox);
+      dashStatCards.appendChild(card);
+    });
+
+    /* ─── Row 2 Left: Score Distribution ─── */
+    while (dashScoreDist.firstChild) dashScoreDist.removeChild(dashScoreDist.firstChild);
+
+    var buckets = [
+      { label: 'Poor', range: '0-20', min: 0, max: 20, color: '#ef4444', count: 0 },
+      { label: 'Fair', range: '21-50', min: 21, max: 50, color: '#f97316', count: 0 },
+      { label: 'Good', range: '51-70', min: 51, max: 70, color: '#f59e0b', count: 0 },
+      { label: 'Very Good', range: '71-85', min: 71, max: 85, color: '#3b82f6', count: 0 },
+      { label: 'Excellent', range: '86-100', min: 86, max: 100, color: '#22c55e', count: 0 }
+    ];
+
+    history.forEach(function(entry) {
+      var s = entry.total_score || 0;
+      for (var i = 0; i < buckets.length; i++) {
+        if (s >= buckets[i].min && s <= buckets[i].max) {
+          buckets[i].count++;
+          break;
+        }
+      }
+    });
+
+    var maxBucketCount = 0;
+    buckets.forEach(function(b) { if (b.count > maxBucketCount) maxBucketCount = b.count; });
+    if (maxBucketCount === 0) maxBucketCount = 1;
+
+    buckets.forEach(function(b) {
+      var col = document.createElement('div');
+      col.className = 'flex flex-col items-center flex-1 gap-1';
+
+      var countEl = document.createElement('span');
+      countEl.className = 'text-xs font-bold text-on-surface';
+      countEl.textContent = String(b.count);
+
+      var barWrap = document.createElement('div');
+      barWrap.className = 'w-full flex items-end justify-center';
+      barWrap.style.height = '120px';
+      var bar = document.createElement('div');
+      bar.className = 'rounded-t-md transition-all duration-500';
+      bar.style.width = '70%';
+      bar.style.background = b.color;
+      var barHeight = maxBucketCount > 0 ? Math.max(6, (b.count / maxBucketCount) * 120) : 6;
+      bar.style.height = barHeight + 'px';
+      barWrap.appendChild(bar);
+
+      var labelEl = document.createElement('span');
+      labelEl.className = 'text-[10px] text-on-surface-variant text-center leading-tight font-medium';
+      labelEl.textContent = b.label;
+
+      var rangeEl = document.createElement('span');
+      rangeEl.className = 'text-[9px] text-outline text-center';
+      rangeEl.textContent = b.range;
+
+      col.appendChild(countEl);
+      col.appendChild(barWrap);
+      col.appendChild(labelEl);
+      col.appendChild(rangeEl);
+      dashScoreDist.appendChild(col);
+    });
+
+    /* ─── Row 2 Right: Category Performance ─── */
+    while (dashCatPerf.firstChild) dashCatPerf.removeChild(dashCatPerf.firstChild);
+
+    var catStats = {};
+    history.forEach(function(entry) {
+      var cat = entry.category || 'Uncategorized';
+      if (!catStats[cat]) catStats[cat] = { count: 0, sum: 0, best: 0 };
+      catStats[cat].count++;
+      catStats[cat].sum += (entry.total_score || 0);
+      if ((entry.total_score || 0) > catStats[cat].best) catStats[cat].best = entry.total_score || 0;
+    });
+
+    var catKeys = Object.keys(catStats);
+    catKeys.sort(function(a, b) {
+      var avgA = catStats[a].sum / catStats[a].count;
+      var avgB = catStats[b].sum / catStats[b].count;
+      return avgB - avgA;
+    });
+
+    if (catKeys.length === 0) {
+      var noData = document.createElement('p');
+      noData.className = 'text-xs text-on-surface-variant';
+      noData.textContent = 'No category data available.';
+      dashCatPerf.appendChild(noData);
+    } else {
+      var table = document.createElement('table');
+      table.className = 'w-full text-sm';
+      var thead = document.createElement('thead');
+      var headRow = document.createElement('tr');
+      headRow.className = 'border-b border-outline-variant/10 text-on-surface-variant';
+      var cols = ['Category', 'Tests Run', 'Avg Score', 'Best Score'];
+      cols.forEach(function(c) {
+        var th = document.createElement('th');
+        th.className = 'text-left px-3 py-2 text-[11px] font-bold uppercase tracking-wider';
+        if (c !== 'Category') th.className += ' text-center';
+        th.textContent = c;
+        headRow.appendChild(th);
+      });
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+
+      var tbody = document.createElement('tbody');
+      catKeys.forEach(function(cat) {
+        var s = catStats[cat];
+        var avg = (s.sum / s.count).toFixed(1);
+        var tr = document.createElement('tr');
+        tr.className = 'border-b border-outline-variant/5';
+
+        var tdCat = document.createElement('td');
+        tdCat.className = 'px-3 py-2.5 text-xs font-semibold text-on-surface capitalize';
+        tdCat.textContent = cat;
+
+        var tdCount = document.createElement('td');
+        tdCount.className = 'px-3 py-2.5 text-xs text-on-surface-variant text-center';
+        tdCount.textContent = String(s.count);
+
+        var tdAvg = document.createElement('td');
+        tdAvg.className = 'px-3 py-2.5 text-center';
+        var avgBadge = document.createElement('span');
+        avgBadge.className = 'text-xs font-bold px-2 py-0.5 rounded';
+        var avgNum = parseFloat(avg);
+        if (avgNum >= 86) { avgBadge.className += ' bg-green-100 text-green-700'; }
+        else if (avgNum >= 71) { avgBadge.className += ' bg-blue-100 text-blue-700'; }
+        else if (avgNum >= 51) { avgBadge.className += ' bg-amber-100 text-amber-700'; }
+        else { avgBadge.className += ' bg-red-100 text-red-700'; }
+        avgBadge.textContent = avg;
+        tdAvg.appendChild(avgBadge);
+
+        var tdBest = document.createElement('td');
+        tdBest.className = 'px-3 py-2.5 text-xs font-bold text-on-surface text-center';
+        tdBest.textContent = String(s.best);
+
+        tr.appendChild(tdCat);
+        tr.appendChild(tdCount);
+        tr.appendChild(tdAvg);
+        tr.appendChild(tdBest);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      dashCatPerf.appendChild(table);
+    }
+
+    /* ─── Row 3: Recent Evaluations ─── */
+    while (dashRecent.firstChild) dashRecent.removeChild(dashRecent.firstChild);
+
+    var recentVerdictColors = {
+      'Highly Accurate': 'bg-green-100 text-green-700',
+      'Good':            'bg-blue-100 text-blue-700',
+      'Fair':            'bg-amber-100 text-amber-700',
+      'Poor':            'bg-red-100 text-red-700'
+    };
+
+    var recentItems = history.slice(0, 5);
+    recentItems.forEach(function(entry) {
+      var date = new Date(entry.date);
+      var dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+                    ' ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      var score = entry.total_score || 0;
+      var verdict = entry.verdict || 'Fair';
+      var vClass = recentVerdictColors[verdict] || 'bg-slate-100 text-slate-700';
+
+      var card = document.createElement('div');
+      card.className = 'bg-surface-container-low rounded-lg p-4 border border-outline-variant/10 flex flex-col gap-2';
+
+      /* Date + score badge row */
+      var topRow = document.createElement('div');
+      topRow.className = 'flex items-center justify-between';
+      var dateEl = document.createElement('span');
+      dateEl.className = 'text-[10px] text-on-surface-variant';
+      dateEl.textContent = dateStr;
+      var scoreBadge = document.createElement('span');
+      scoreBadge.className = 'text-sm font-bold text-on-primary bg-primary px-2 py-0.5 rounded';
+      scoreBadge.textContent = String(score);
+      topRow.appendChild(dateEl);
+      topRow.appendChild(scoreBadge);
+
+      /* Verdict */
+      var verdictEl = document.createElement('span');
+      verdictEl.className = 'text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded self-start ' + vClass;
+      verdictEl.textContent = verdict;
+
+      /* AI snippet */
+      var snippetEl = document.createElement('p');
+      snippetEl.className = 'text-[11px] text-on-surface-variant line-clamp-2 arabic-text leading-relaxed';
+      snippetEl.dir = 'rtl';
+      snippetEl.textContent = entry.ai_snippet || '';
+
+      /* Category tag */
+      if (entry.category) {
+        var catTag = document.createElement('span');
+        catTag.className = 'text-[9px] font-bold uppercase tracking-wider bg-primary-container text-on-primary-container px-2 py-0.5 rounded self-start';
+        catTag.textContent = entry.category;
+        card.appendChild(topRow);
+        card.appendChild(verdictEl);
+        card.appendChild(snippetEl);
+        card.appendChild(catTag);
+      } else {
+        card.appendChild(topRow);
+        card.appendChild(verdictEl);
+        card.appendChild(snippetEl);
+      }
+
+      dashRecent.appendChild(card);
+    });
+  }
+
+  /* Initial dashboard render */
+  refreshDashboard();
 
   /* ═══════════════════════════════════════════════ */
   /* EVALUATE TAB                                    */
@@ -728,9 +1091,9 @@
   }
 
   /* ─── History Persistence ─── */
-  function saveToHistory(result) {
+  function saveToHistory(result, meta) {
     var history = getHistory();
-    history.unshift({
+    var entry = {
       id: Date.now(),
       date: new Date().toISOString(),
       total_score: result.total_score,
@@ -738,7 +1101,12 @@
       ai_snippet: aiInput.value.substring(0, 100),
       ref_snippet: refInput.value.substring(0, 100),
       full_result: result
-    });
+    };
+    if (meta) {
+      if (meta.category) entry.category = meta.category;
+      if (meta.case_id) entry.case_id = meta.case_id;
+    }
+    history.unshift(entry);
     if (history.length > 100) history = history.slice(0, 100);
     try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch(e) {}
     updateHistoryCount();
@@ -1023,7 +1391,7 @@
         if (res.ok) {
           renderResults(data);
           showState('results');
-          saveToHistory(data);
+          saveToHistory(data, { category: tc.category, case_id: tc.id });
         }
       } catch(e) {}
       setTimeout(function() { runNextInQueue(); }, 1500);
