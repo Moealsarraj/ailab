@@ -636,7 +636,7 @@ async function executeRun() {
   document.getElementById('summary-empty').classList.remove('hidden');
 
   try {
-    const res = await fetch('/api/run', {
+    const res = await fetch('api/run', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrf },
       body: JSON.stringify({ system_prompt: systemPrompt, test_cases: validCases })
@@ -847,7 +847,7 @@ async function getRecommendations() {
   list.appendChild(loading);
 
   try {
-    const res  = await fetch('/api/recommend-fixes', {
+    const res  = await fetch('api/recommend-fixes', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': _csrf },
       body:    JSON.stringify({ system_prompt: systemPrompt, run_results: _lastRunResults }),

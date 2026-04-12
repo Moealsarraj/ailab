@@ -186,7 +186,7 @@
     showState('loading');
 
     try {
-      const res = await fetch('/api/audit', {
+      const res = await fetch('api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
         body: JSON.stringify({ system_prompt })

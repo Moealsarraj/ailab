@@ -230,7 +230,7 @@
     critiqueCard.classList.add('hidden');
 
     try {
-      const res = await fetch('/api/evaluate', {
+      const res = await fetch('api/evaluate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
         body: JSON.stringify({ ai_response, reference })
