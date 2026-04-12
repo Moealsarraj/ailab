@@ -75,9 +75,18 @@
       <div id="tab-dashboard" class="max-w-7xl mx-auto">
 
         <!-- Row 1: Stat Cards -->
-        <div class="mb-6">
-          <h2 class="text-xl font-bold text-on-surface tracking-tight">Dashboard</h2>
-          <p class="text-sm text-on-surface-variant mt-1">Aggregate performance overview from your evaluation history</p>
+        <div class="mb-6 flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <h2 class="text-xl font-bold text-on-surface tracking-tight">Dashboard</h2>
+            <p class="text-sm text-on-surface-variant mt-1">Aggregate performance overview from your evaluation history</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-on-surface-variant font-medium">Show:</label>
+            <select id="dash-run-filter" onchange="refreshDashboard()"
+              class="text-xs border border-outline-variant/30 rounded-lg px-3 py-1.5 bg-surface-container-low focus:outline-none focus:border-primary text-on-surface min-w-[200px]">
+              <option value="all">All Evaluations</option>
+            </select>
+          </div>
         </div>
 
         <!-- Empty state -->
@@ -674,9 +683,9 @@
   var dashRecent     = document.getElementById('dash-recent');
 
   function refreshDashboard() {
-    var history = getHistory();
+    var allHistory = getHistory();
 
-    if (history.length === 0) {
+    if (allHistory.length === 0) {
       dashEmpty.classList.remove('hidden');
       dashContent.classList.add('hidden');
       return;
@@ -684,6 +693,62 @@
 
     dashEmpty.classList.add('hidden');
     dashContent.classList.remove('hidden');
+
+    /* ─── Build run filter dropdown ─── */
+    var filterEl = document.getElementById('dash-run-filter');
+    var currentFilter = filterEl.value || 'all';
+
+    // Group runs by session (entries within 2 minutes of each other = same run)
+    var runs = [];
+    var sorted = allHistory.slice().sort(function(a, b) { return new Date(b.date) - new Date(a.date); });
+    var currentRun = null;
+    sorted.forEach(function(entry) {
+      var t = new Date(entry.date).getTime();
+      if (!currentRun || (currentRun.startTime - t) > 120000) {
+        currentRun = {
+          id: 'run-' + entry.id,
+          startTime: t,
+          endTime: t,
+          entries: [],
+          categories: {}
+        };
+        runs.push(currentRun);
+      }
+      currentRun.endTime = Math.min(currentRun.endTime, t);
+      currentRun.entries.push(entry);
+      if (entry.category) currentRun.categories[entry.category] = true;
+    });
+
+    // Rebuild dropdown options
+    while (filterEl.options.length > 1) filterEl.remove(1);
+    runs.forEach(function(run, i) {
+      var opt = document.createElement('option');
+      opt.value = run.id;
+      var d = new Date(run.startTime);
+      var cats = Object.keys(run.categories);
+      var label = d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+      label += ' — ' + run.entries.length + ' test' + (run.entries.length > 1 ? 's' : '');
+      if (cats.length > 0 && cats.length <= 3) label += ' (' + cats.join(', ') + ')';
+      opt.textContent = label;
+      filterEl.appendChild(opt);
+    });
+
+    // Restore selection if still valid
+    var validOptions = Array.from(filterEl.options).map(function(o) { return o.value; });
+    if (validOptions.indexOf(currentFilter) >= 0) {
+      filterEl.value = currentFilter;
+    } else {
+      filterEl.value = 'all';
+    }
+
+    // Filter history based on selection
+    var history;
+    if (filterEl.value === 'all') {
+      history = allHistory;
+    } else {
+      var selectedRun = runs.find(function(r) { return r.id === filterEl.value; });
+      history = selectedRun ? selectedRun.entries : allHistory;
+    }
 
     /* ─── Row 1: Stat Cards ─── */
     var totalEvals = history.length;
