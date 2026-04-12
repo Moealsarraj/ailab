@@ -34,6 +34,11 @@
           <span class="material-symbols-outlined text-[20px]">dataset</span>
           Test Suite
         </button>
+        <button onclick="showTab('benchmark')" id="nav-benchmark"
+          class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
+          <span class="material-symbols-outlined text-[20px]">leaderboard</span>
+          Benchmark
+        </button>
         <button onclick="showTab('history')" id="nav-history"
           class="w-full text-left text-on-surface-variant hover:bg-white hover:shadow-sm rounded-lg flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all">
           <span class="material-symbols-outlined text-[20px]">history</span>
@@ -321,7 +326,127 @@
         </div>
       </div><!-- /tab-suite -->
 
-      <!-- TAB 3: HISTORY -->
+      <!-- TAB 3: BENCHMARK -->
+      <div id="tab-benchmark" class="hidden max-w-7xl mx-auto">
+
+        <!-- Header -->
+        <div class="mb-6">
+          <h2 class="text-xl font-bold text-on-surface tracking-tight">Model Benchmark</h2>
+          <p class="text-sm text-on-surface-variant mt-1">Compare AI models on the same Arabic task</p>
+        </div>
+
+        <div class="grid grid-cols-12 gap-8">
+
+          <!-- Left: Input -->
+          <div class="col-span-12 lg:col-span-5 flex flex-col gap-5">
+
+            <!-- Test case selector -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-4">
+              <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Select Test Case</h4>
+              <select id="bench-case-select"
+                class="w-full text-sm rounded-lg border border-outline-variant/20 bg-surface-container-low px-3 py-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors">
+                <option value="">-- Custom prompt (manual input) --</option>
+              </select>
+
+              <div class="flex flex-col gap-3">
+                <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Prompt</label>
+                <textarea id="bench-prompt"
+                  class="arabic-text w-full min-h-[120px] text-sm leading-relaxed text-right p-3 bg-surface-container-low rounded-lg border border-outline-variant/20 focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-on-surface-variant/50"
+                  dir="rtl"
+                  placeholder="اكتب المطلوب من النموذج هنا..."></textarea>
+              </div>
+
+              <div class="flex flex-col gap-3">
+                <label class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">Reference Answer</label>
+                <textarea id="bench-reference"
+                  class="arabic-text w-full min-h-[100px] text-sm leading-relaxed text-right p-3 bg-surface-container-low rounded-lg border border-outline-variant/20 focus:ring-2 focus:ring-primary/20 resize-none placeholder:text-on-surface-variant/50"
+                  dir="rtl"
+                  placeholder="الإجابة المرجعية (اختياري)..."></textarea>
+              </div>
+            </div>
+
+            <!-- Provider checkboxes -->
+            <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant/10 flex flex-col gap-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Providers</h4>
+                <button id="bench-toggle-all" class="text-[11px] font-semibold text-primary hover:underline transition-colors">Select All</button>
+              </div>
+              <div id="bench-providers-list" class="flex flex-col gap-2">
+                <div class="flex items-center justify-center py-4">
+                  <div class="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  <span class="ml-2 text-xs text-on-surface-variant">Loading providers...</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Run button -->
+            <button id="btn-benchmark"
+              class="w-full py-3 bg-primary text-on-primary font-semibold rounded-xl shadow-lg hover:bg-primary-dim hover:shadow-primary/20 transition-all active:scale-[0.99] flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">leaderboard</span>
+              <span>Run Benchmark</span>
+            </button>
+          </div>
+
+          <!-- Right: Results -->
+          <div class="col-span-12 lg:col-span-7 flex flex-col gap-6">
+
+            <!-- Empty state -->
+            <div id="bench-empty" class="flex flex-col items-center justify-center py-20 text-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-5xl text-outline mb-4" style="font-variation-settings:'FILL' 1;">leaderboard</span>
+              <p class="text-sm font-medium">Select providers and run a benchmark</p>
+              <p class="text-xs text-outline mt-1">Leaderboard and detailed results will appear here</p>
+            </div>
+
+            <!-- Loading state -->
+            <div id="bench-loading" class="hidden flex flex-col items-center justify-center py-20 gap-4">
+              <div class="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p id="bench-loading-text" class="text-sm text-on-surface-variant">Benchmarking models...</p>
+              <div class="w-48 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+                <div id="bench-progress-bar" class="h-full bg-primary rounded-full transition-all duration-500" style="width:0%"></div>
+              </div>
+            </div>
+
+            <!-- Error state -->
+            <div id="bench-error" class="hidden flex flex-col items-center justify-center py-16 text-center">
+              <span class="material-symbols-outlined text-error text-4xl mb-3">error</span>
+              <p id="bench-error-msg" class="text-sm text-error font-medium px-8"></p>
+            </div>
+
+            <!-- Results -->
+            <div id="bench-results" class="hidden flex flex-col gap-6">
+
+              <!-- Leaderboard -->
+              <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden">
+                <div class="px-6 py-4 border-b border-outline-variant/10">
+                  <h4 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Leaderboard</h4>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="border-b border-outline-variant/10 text-on-surface-variant">
+                        <th class="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider w-12">Rank</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Provider</th>
+                        <th class="text-left px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Model</th>
+                        <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Score</th>
+                        <th class="text-center px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Verdict</th>
+                        <th class="text-right px-4 py-3 text-[11px] font-bold uppercase tracking-wider">Time</th>
+                      </tr>
+                    </thead>
+                    <tbody id="bench-leaderboard-body"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Detailed cards -->
+              <div id="bench-detail-cards" class="flex flex-col gap-4"></div>
+
+            </div><!-- /bench-results -->
+
+          </div>
+        </div>
+      </div><!-- /tab-benchmark -->
+
+      <!-- TAB 4: HISTORY -->
       <div id="tab-history" class="hidden max-w-7xl mx-auto">
         <div class="flex items-center justify-between mb-6">
           <div>
@@ -401,12 +526,14 @@
   var weaknessesList = document.getElementById('weaknesses-list');
 
   /* ─── DOM: Tabs ─── */
-  var tabEvaluate = document.getElementById('tab-evaluate');
-  var tabSuite    = document.getElementById('tab-suite');
-  var tabHistory  = document.getElementById('tab-history');
-  var navEvaluate = document.getElementById('nav-evaluate');
-  var navSuite    = document.getElementById('nav-suite');
-  var navHistory  = document.getElementById('nav-history');
+  var tabEvaluate  = document.getElementById('tab-evaluate');
+  var tabSuite     = document.getElementById('tab-suite');
+  var tabBenchmark = document.getElementById('tab-benchmark');
+  var tabHistory   = document.getElementById('tab-history');
+  var navEvaluate  = document.getElementById('nav-evaluate');
+  var navSuite     = document.getElementById('nav-suite');
+  var navBenchmark = document.getElementById('nav-benchmark');
+  var navHistory   = document.getElementById('nav-history');
 
   /* ─── DOM: Test Suite ─── */
   var suiteCategories = document.getElementById('suite-categories');
@@ -446,11 +573,13 @@
 
     tabEvaluate.classList.add('hidden');
     tabSuite.classList.add('hidden');
+    tabBenchmark.classList.add('hidden');
     tabHistory.classList.add('hidden');
 
-    navEvaluate.className = NAV_DEFAULT;
-    navSuite.className    = NAV_DEFAULT;
-    navHistory.className  = NAV_DEFAULT;
+    navEvaluate.className  = NAV_DEFAULT;
+    navSuite.className     = NAV_DEFAULT;
+    navBenchmark.className = NAV_DEFAULT;
+    navHistory.className   = NAV_DEFAULT;
 
     if (tabName === 'evaluate') {
       tabEvaluate.classList.remove('hidden');
@@ -459,6 +588,9 @@
       tabSuite.classList.remove('hidden');
       navSuite.className = NAV_ACTIVE;
       renderCategoryGrid();
+    } else if (tabName === 'benchmark') {
+      tabBenchmark.classList.remove('hidden');
+      navBenchmark.className = NAV_ACTIVE;
     } else if (tabName === 'history') {
       tabHistory.classList.remove('hidden');
       navHistory.className = NAV_ACTIVE;
@@ -896,6 +1028,399 @@
       } catch(e) {}
       setTimeout(function() { runNextInQueue(); }, 1500);
     })();
+  }
+
+  /* ═══════════════════════════════════════════════ */
+  /* BENCHMARK TAB                                   */
+  /* ═══════════════════════════════════════════════ */
+  var benchCaseSelect   = document.getElementById('bench-case-select');
+  var benchPrompt       = document.getElementById('bench-prompt');
+  var benchReference    = document.getElementById('bench-reference');
+  var benchProvidersList = document.getElementById('bench-providers-list');
+  var benchToggleAll    = document.getElementById('bench-toggle-all');
+  var btnBenchmark      = document.getElementById('btn-benchmark');
+  var benchEmpty        = document.getElementById('bench-empty');
+  var benchLoading      = document.getElementById('bench-loading');
+  var benchLoadingText  = document.getElementById('bench-loading-text');
+  var benchProgressBar  = document.getElementById('bench-progress-bar');
+  var benchError        = document.getElementById('bench-error');
+  var benchErrorMsg     = document.getElementById('bench-error-msg');
+  var benchResults      = document.getElementById('bench-results');
+  var benchLeaderboard  = document.getElementById('bench-leaderboard-body');
+  var benchDetailCards  = document.getElementById('bench-detail-cards');
+
+  var benchProviders = [];    /* loaded from API */
+  var benchAllSelected = false;
+
+  /* Populate test case dropdown from dataset */
+  DATASET.forEach(function(tc) {
+    var opt = document.createElement('option');
+    opt.value = tc.id;
+    opt.textContent = tc.title + ' — ' + (tc.prompt || '').substring(0, 60);
+    benchCaseSelect.appendChild(opt);
+  });
+
+  benchCaseSelect.addEventListener('change', function() {
+    var tcId = this.value;
+    if (!tcId) {
+      benchPrompt.value = '';
+      benchReference.value = '';
+      benchPrompt.removeAttribute('readonly');
+      benchReference.removeAttribute('readonly');
+      return;
+    }
+    var tc = DATASET.find(function(d) { return String(d.id) === String(tcId); });
+    if (tc) {
+      benchPrompt.value = tc.prompt || '';
+      benchReference.value = tc.reference || '';
+    }
+  });
+
+  /* Fetch providers on page load */
+  (async function loadProviders() {
+    try {
+      var res = await fetch('api/providers', {
+        headers: { 'X-CSRFToken': CSRF }
+      });
+      var data = await res.json();
+      benchProviders = data.providers || [];
+      renderProviderCheckboxes();
+    } catch(e) {
+      benchProvidersList.innerHTML = '<p class="text-xs text-error">Failed to load providers</p>';
+    }
+  })();
+
+  function renderProviderCheckboxes() {
+    while (benchProvidersList.firstChild) benchProvidersList.removeChild(benchProvidersList.firstChild);
+    if (benchProviders.length === 0) {
+      benchProvidersList.innerHTML = '<p class="text-xs text-on-surface-variant">No providers available</p>';
+      return;
+    }
+    benchProviders.forEach(function(p) {
+      var label = document.createElement('label');
+      label.className = 'flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-surface-container-low cursor-pointer transition-colors';
+
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = p.name;
+      cb.className = 'bench-provider-cb w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/20';
+      cb.checked = true;
+
+      var info = document.createElement('div');
+      info.className = 'flex-1 min-w-0';
+      var nameEl = document.createElement('span');
+      nameEl.className = 'text-sm font-semibold text-on-surface capitalize';
+      nameEl.textContent = p.name;
+      var modelEl = document.createElement('span');
+      modelEl.className = 'text-[11px] text-on-surface-variant ml-2';
+      modelEl.textContent = p.model_free || p.model_premium || '';
+      info.appendChild(nameEl);
+      info.appendChild(modelEl);
+
+      label.appendChild(cb);
+      label.appendChild(info);
+      benchProvidersList.appendChild(label);
+    });
+    benchAllSelected = true;
+  }
+
+  benchToggleAll.addEventListener('click', function() {
+    var cbs = benchProvidersList.querySelectorAll('.bench-provider-cb');
+    benchAllSelected = !benchAllSelected;
+    cbs.forEach(function(cb) { cb.checked = benchAllSelected; });
+    benchToggleAll.textContent = benchAllSelected ? 'Deselect All' : 'Select All';
+  });
+
+  function showBenchState(state) {
+    benchEmpty.classList.add('hidden');
+    benchLoading.classList.add('hidden');
+    benchError.classList.add('hidden');
+    benchResults.classList.add('hidden');
+    if (state === 'loading') benchLoading.classList.remove('hidden');
+    else if (state === 'error') benchError.classList.remove('hidden');
+    else if (state === 'results') benchResults.classList.remove('hidden');
+    else benchEmpty.classList.remove('hidden');
+  }
+
+  /* Run benchmark */
+  btnBenchmark.addEventListener('click', async function() {
+    var prompt = benchPrompt.value.trim();
+    if (!prompt) { benchPrompt.focus(); return; }
+
+    var selectedProviders = [];
+    benchProvidersList.querySelectorAll('.bench-provider-cb:checked').forEach(function(cb) {
+      selectedProviders.push(cb.value);
+    });
+    if (selectedProviders.length === 0) {
+      showBenchState('error');
+      benchErrorMsg.textContent = 'Select at least one provider.';
+      return;
+    }
+
+    showBenchState('loading');
+    benchLoadingText.textContent = 'Benchmarking ' + selectedProviders.length + ' model' + (selectedProviders.length > 1 ? 's' : '') + '...';
+    benchProgressBar.style.width = '10%';
+
+    /* Animate progress bar while waiting */
+    var progInterval = setInterval(function() {
+      var w = parseFloat(benchProgressBar.style.width) || 10;
+      if (w < 85) benchProgressBar.style.width = (w + Math.random() * 5) + '%';
+    }, 1500);
+
+    try {
+      var res = await fetch('api/benchmark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+        body: JSON.stringify({
+          prompt: prompt,
+          reference: benchReference.value.trim(),
+          providers: selectedProviders
+        })
+      });
+      clearInterval(progInterval);
+      benchProgressBar.style.width = '100%';
+
+      var data = await res.json();
+      if (!res.ok) {
+        showBenchState('error');
+        benchErrorMsg.textContent = data.error || 'Benchmark failed -- try again.';
+        return;
+      }
+      renderBenchResults(data);
+      showBenchState('results');
+    } catch(e) {
+      clearInterval(progInterval);
+      showBenchState('error');
+      benchErrorMsg.textContent = 'Network error -- is the server running?';
+    }
+  });
+
+  /* Render benchmark results */
+  function renderBenchResults(data) {
+    var results = (data.results || []).slice();
+
+    /* Sort by score descending */
+    results.sort(function(a, b) {
+      var sa = (a.evaluation && a.evaluation.total_score) || 0;
+      var sb = (b.evaluation && b.evaluation.total_score) || 0;
+      return sb - sa;
+    });
+
+    /* Leaderboard table */
+    while (benchLeaderboard.firstChild) benchLeaderboard.removeChild(benchLeaderboard.firstChild);
+
+    var rankColors = ['#EAB308', '#9CA3AF', '#CD7F32']; /* gold, silver, bronze */
+    var rankBgs = ['bg-amber-50', 'bg-slate-50', 'bg-orange-50'];
+    var verdictColors = {
+      'Highly Accurate': 'bg-green-100 text-green-700',
+      'Good':            'bg-blue-100 text-blue-700',
+      'Fair':            'bg-amber-100 text-amber-700',
+      'Poor':            'bg-red-100 text-red-700'
+    };
+
+    results.forEach(function(r, idx) {
+      var ev = r.evaluation || {};
+      var score = ev.total_score || 0;
+      var verdict = ev.verdict || (r.error ? 'Error' : 'N/A');
+      var time = r.time_seconds != null ? r.time_seconds.toFixed(1) + 's' : '--';
+
+      var tr = document.createElement('tr');
+      tr.className = 'border-b border-outline-variant/5 ' + (idx < 3 ? (rankBgs[idx] || '') : '');
+
+      /* Rank */
+      var tdRank = document.createElement('td');
+      tdRank.className = 'px-4 py-3 text-center';
+      if (r.error) {
+        tdRank.innerHTML = '<span class="material-symbols-outlined text-base text-error">close</span>';
+      } else if (idx < 3) {
+        tdRank.innerHTML = '<span class="text-lg font-bold" style="color:' + rankColors[idx] + '">' + (idx + 1) + '</span>';
+      } else {
+        tdRank.innerHTML = '<span class="text-sm font-semibold text-on-surface-variant">' + (idx + 1) + '</span>';
+      }
+
+      /* Provider */
+      var tdProvider = document.createElement('td');
+      tdProvider.className = 'px-4 py-3 text-sm font-semibold text-on-surface capitalize';
+      tdProvider.textContent = r.provider || '';
+
+      /* Model */
+      var tdModel = document.createElement('td');
+      tdModel.className = 'px-4 py-3 text-xs text-on-surface-variant';
+      tdModel.textContent = r.model || '';
+
+      /* Score */
+      var tdScore = document.createElement('td');
+      tdScore.className = 'px-4 py-3 text-center';
+      if (r.error) {
+        tdScore.innerHTML = '<span class="text-xs text-error font-medium">Error</span>';
+      } else {
+        tdScore.innerHTML = '<span class="text-lg font-bold text-on-surface">' + score + '</span><span class="text-xs text-on-surface-variant">/100</span>';
+      }
+
+      /* Verdict */
+      var tdVerdict = document.createElement('td');
+      tdVerdict.className = 'px-4 py-3 text-center';
+      var vClass = r.error ? 'bg-red-100 text-red-700' : (verdictColors[verdict] || 'bg-slate-100 text-slate-700');
+      tdVerdict.innerHTML = '<span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ' + vClass + '">' + verdict + '</span>';
+
+      /* Time */
+      var tdTime = document.createElement('td');
+      tdTime.className = 'px-4 py-3 text-right text-xs font-medium text-on-surface-variant';
+      tdTime.textContent = time;
+
+      tr.appendChild(tdRank);
+      tr.appendChild(tdProvider);
+      tr.appendChild(tdModel);
+      tr.appendChild(tdScore);
+      tr.appendChild(tdVerdict);
+      tr.appendChild(tdTime);
+      benchLeaderboard.appendChild(tr);
+    });
+
+    /* Detail cards */
+    while (benchDetailCards.firstChild) benchDetailCards.removeChild(benchDetailCards.firstChild);
+
+    results.forEach(function(r, idx) {
+      var ev = r.evaluation || {};
+      var card = document.createElement('div');
+      card.className = 'bg-surface-container-lowest rounded-xl border border-outline-variant/10 overflow-hidden';
+
+      /* Card header (clickable to expand) */
+      var header = document.createElement('div');
+      header.className = 'flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-surface-container-low transition-colors';
+
+      var rankBadge = document.createElement('div');
+      if (r.error) {
+        rankBadge.className = 'w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center shrink-0';
+        rankBadge.innerHTML = '<span class="material-symbols-outlined text-red-600">close</span>';
+      } else if (idx < 3) {
+        var medalBg = ['bg-amber-100', 'bg-slate-200', 'bg-orange-100'];
+        var medalText = ['text-amber-700', 'text-slate-600', 'text-orange-700'];
+        rankBadge.className = 'w-10 h-10 rounded-lg ' + medalBg[idx] + ' flex items-center justify-center shrink-0';
+        rankBadge.innerHTML = '<span class="text-lg font-bold ' + medalText[idx] + '">#' + (idx + 1) + '</span>';
+      } else {
+        rankBadge.className = 'w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center shrink-0';
+        rankBadge.innerHTML = '<span class="text-sm font-bold text-on-surface-variant">#' + (idx + 1) + '</span>';
+      }
+
+      var info = document.createElement('div');
+      info.className = 'flex-1 min-w-0';
+      var providerLine = document.createElement('div');
+      providerLine.className = 'flex items-center gap-2';
+      var provName = document.createElement('span');
+      provName.className = 'text-sm font-semibold text-on-surface capitalize';
+      provName.textContent = r.provider || '';
+      var modelTag = document.createElement('span');
+      modelTag.className = 'text-[10px] text-on-surface-variant bg-surface-container px-1.5 py-0.5 rounded';
+      modelTag.textContent = r.model || '';
+      providerLine.appendChild(provName);
+      providerLine.appendChild(modelTag);
+
+      var scoreLine = document.createElement('div');
+      scoreLine.className = 'flex items-center gap-2 mt-0.5';
+      if (r.error) {
+        scoreLine.innerHTML = '<span class="text-xs text-error font-medium">Error: ' + (r.error.length > 80 ? r.error.substring(0, 80) + '...' : r.error) + '</span>';
+      } else {
+        scoreLine.innerHTML = '<span class="text-xs font-bold text-primary">' + (ev.total_score || 0) + '/100</span>' +
+          '<span class="text-[10px] text-on-surface-variant">' + (r.time_seconds != null ? r.time_seconds.toFixed(1) + 's' : '') + '</span>';
+      }
+      info.appendChild(providerLine);
+      info.appendChild(scoreLine);
+
+      var expandIcon = document.createElement('span');
+      expandIcon.className = 'material-symbols-outlined text-outline text-base shrink-0 bench-expand-icon';
+      expandIcon.textContent = 'expand_more';
+
+      header.appendChild(rankBadge);
+      header.appendChild(info);
+      header.appendChild(expandIcon);
+
+      /* Expandable detail panel */
+      var panel = document.createElement('div');
+      panel.className = 'hidden border-t border-outline-variant/10 p-5 bg-surface-container-low';
+
+      if (r.error) {
+        var errP = document.createElement('p');
+        errP.className = 'text-sm text-error';
+        errP.textContent = r.error;
+        panel.appendChild(errP);
+      } else {
+        /* Arabic response text */
+        var respSection = document.createElement('div');
+        respSection.className = 'mb-5';
+        var respLabel = document.createElement('div');
+        respLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2';
+        respLabel.textContent = 'Response';
+        var respText = document.createElement('div');
+        respText.className = 'arabic-text text-sm leading-relaxed text-on-surface bg-surface-container-lowest p-4 rounded-lg border border-outline-variant/10 max-h-40 overflow-y-auto';
+        respText.dir = 'rtl';
+        respText.textContent = r.response || '';
+        respSection.appendChild(respLabel);
+        respSection.appendChild(respText);
+        panel.appendChild(respSection);
+
+        /* Metric bars */
+        var metricsSection = document.createElement('div');
+        metricsSection.className = 'space-y-3';
+        var metricsLabel = document.createElement('div');
+        metricsLabel.className = 'text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-2';
+        metricsLabel.textContent = 'Metrics';
+        metricsSection.appendChild(metricsLabel);
+
+        var metricList = [
+          { key: 'correctness', label: 'Correctness' },
+          { key: 'grammar', label: 'Grammar & Syntax' },
+          { key: 'fluency', label: 'Fluency' },
+          { key: 'terminology_accuracy', label: 'Terminology' },
+          { key: 'dialect_awareness', label: 'Dialect Awareness' },
+          { key: 'cultural_appropriateness', label: 'Cultural' }
+        ];
+
+        metricList.forEach(function(m) {
+          var val = Math.min(100, Math.max(0, ev[m.key] || 0));
+          var row = document.createElement('div');
+          row.className = 'space-y-1';
+          var rowHeader = document.createElement('div');
+          rowHeader.className = 'flex justify-between items-end';
+          var mLabel = document.createElement('span');
+          mLabel.className = 'text-xs font-medium text-on-surface';
+          mLabel.textContent = m.label;
+          var mValue = document.createElement('span');
+          mValue.className = 'text-xs font-bold text-primary';
+          mValue.textContent = val + '%';
+          rowHeader.appendChild(mLabel);
+          rowHeader.appendChild(mValue);
+
+          var barBg = document.createElement('div');
+          barBg.className = 'h-1.5 bg-surface-container-highest rounded-full overflow-hidden';
+          var barFill = document.createElement('div');
+          barFill.className = 'h-full bg-primary rounded-full transition-all duration-700';
+          barFill.style.width = val + '%';
+          barBg.appendChild(barFill);
+
+          row.appendChild(rowHeader);
+          row.appendChild(barBg);
+          metricsSection.appendChild(row);
+        });
+
+        panel.appendChild(metricsSection);
+      }
+
+      header.addEventListener('click', function() {
+        var icon = this.querySelector('.bench-expand-icon');
+        if (panel.classList.contains('hidden')) {
+          panel.classList.remove('hidden');
+          icon.textContent = 'expand_less';
+        } else {
+          panel.classList.add('hidden');
+          icon.textContent = 'expand_more';
+        }
+      });
+
+      card.appendChild(header);
+      card.appendChild(panel);
+      benchDetailCards.appendChild(card);
+    });
   }
 
   /* ═══════════════════════════════════════════════ */

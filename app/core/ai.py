@@ -104,6 +104,35 @@ except Exception:
 
 _AI_AVAILABLE = bool(_AVAILABLE or _OLLAMA_PROVIDER)
 
+
+def get_available_providers() -> list[dict]:
+    """Return list of available providers with their model info."""
+    providers = []
+    for name, prov in _AVAILABLE.items():
+        providers.append({
+            "name": name,
+            "model_free": _FREE_MODELS.get(name, ""),
+            "model_premium": _PREMIUM_MODELS.get(name, ""),
+        })
+    return providers
+
+
+def call_ai_single(provider_name: str, messages: list, system: str = "",
+                   max_tokens: int = 2048, use_premium: bool = True) -> str:
+    """Call a specific provider directly (no fallback chain)."""
+    if provider_name not in _AVAILABLE:
+        raise ValueError(f"Provider {provider_name!r} not available")
+    prov = _AVAILABLE[provider_name]
+    models = _PREMIUM_MODELS if use_premium else _FREE_MODELS
+    model = models.get(provider_name, prov.get("model", ""))
+    if system:
+        messages = [{"role": "system", "content": system}] + messages
+    return _post_openai(
+        prov["url"], prov["key"], model,
+        messages, max_tokens, prov["extra"], prov["timeout"]
+    )
+
+
 _RE_THINK = re.compile(r"<think>.*?</think>", re.DOTALL)
 _RE_OPEN  = re.compile(r"^```[a-z]*\n?", re.MULTILINE)
 _RE_CLOSE = re.compile(r"\n?```$", re.MULTILINE)

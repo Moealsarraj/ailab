@@ -1,7 +1,9 @@
 """Arabic Bench routes."""
 from flask import Blueprint, render_template, request, jsonify
 from .bench import evaluate_arabic
+from .benchmark import run_benchmark
 from .dataset import CATEGORIES, DATASET, DATASET_BY_ID, DATASET_BY_CATEGORY
+from app.core.ai import get_available_providers
 
 bp = Blueprint("arabic_bench", __name__, template_folder="templates")
 
@@ -49,3 +51,32 @@ def api_dataset_case(case_id):
     if not case:
         return jsonify({"error": "Test case not found"}), 404
     return jsonify(case)
+
+
+@bp.route("/api/providers")
+def api_providers():
+    """Return list of available AI providers for benchmarking."""
+    return jsonify({"providers": get_available_providers()})
+
+
+@bp.route("/api/benchmark", methods=["POST"])
+def api_benchmark():
+    """Run a multi-model benchmark on an Arabic prompt.
+
+    Body: { "prompt": str, "reference": str, "providers": [str] (optional) }
+    If providers is omitted, all available providers are tested.
+    """
+    body = request.get_json(silent=True) or {}
+    prompt = (body.get("prompt") or "").strip()
+    reference = (body.get("reference") or "").strip()
+    providers = body.get("providers")  # optional list
+
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+    if not reference:
+        return jsonify({"error": "Reference answer is required"}), 400
+
+    result = run_benchmark(prompt, reference, providers)
+    if "error" in result:
+        return jsonify(result), 502
+    return jsonify(result)
