@@ -43,6 +43,7 @@ def evaluate_arabic(ai_response: str, reference: str) -> dict:
             [{"role": "user", "content": prompt}],
             system=_SYSTEM,
             max_tokens=1500,
+            task_hint="arabic",
         )
         return result if isinstance(result, dict) else {}
     except Exception:

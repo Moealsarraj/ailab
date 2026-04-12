@@ -1,4 +1,12 @@
-"""Multi-provider AI engine. Runtime chain: Groq -> Cerebras -> OpenRouter -> Mistral -> Ollama."""
+"""Multi-provider AI engine with smart task routing.
+
+Runtime chain: Groq -> Cerebras -> OpenRouter -> Mistral -> Ollama.
+Task hints route to the best model for the job:
+  - "arabic"   → large models (70B+) for Arabic NLP quality
+  - "code"     → code-optimized models
+  - "fast"     → smallest/fastest model available
+  - "default"  → standard free-tier chain
+"""
 import json, logging, os, re, requests
 
 logger = logging.getLogger(__name__)
@@ -11,6 +19,8 @@ _PROVIDER_URLS = {
     "mistral":    "https://api.mistral.ai/v1/chat/completions",
     "openai":     "https://api.openai.com/v1/chat/completions",
 }
+
+# ── Model tiers per provider ──
 _FREE_MODELS = {
     "groq":       "llama-3.1-8b-instant",
     "cerebras":   "llama3.1-8b",
@@ -24,27 +34,62 @@ _PREMIUM_MODELS = {
     "mistral":    "mistral-medium-latest",
     "openai":     "gpt-4o-mini",
 }
-_CHAIN_CFG = [
-    {"name": "groq",       "key_env": "GROQ_API_KEY",       "timeout": 30, "extra": {}},
-    {"name": "cerebras",   "key_env": "CEREBRAS_API_KEY",   "timeout": 30, "extra": {}},
-    {"name": "openrouter", "key_env": "OPENROUTER_API_KEY", "timeout": 45,
-     "extra": {"HTTP-Referer": "https://github.com/Moealsarraj", "X-Title": "AI Tools"}},
-    {"name": "mistral",    "key_env": "MISTRAL_API_KEY",    "timeout": 40, "extra": {}},
-]
 
-# Build the runtime provider list — all providers with valid keys
-_PROVIDERS = []
-for _p in _CHAIN_CFG:
-    _k = os.environ.get(_p["key_env"], "")
+# ── Task-specific model routing ──
+# Maps task hints to the best model per provider.
+# "arabic" needs large models for Arabic morphology, grammar, dialect awareness.
+# "code" needs code-tuned models for test generation, SQL, schema analysis.
+# "fast" uses smallest models for quick responses.
+_TASK_MODELS = {
+    "arabic": {
+        "groq":       "llama-3.3-70b-versatile",
+        "cerebras":   "qwen-3-235b-a22b-instruct-2507",
+        "openrouter": "google/gemma-3-27b-it:free",
+        "mistral":    "mistral-medium-latest",
+    },
+    "code": {
+        "groq":       "llama-3.3-70b-versatile",
+        "cerebras":   "qwen-3-235b-a22b-instruct-2507",
+        "openrouter": "google/gemma-3-27b-it:free",
+        "mistral":    "mistral-medium-latest",
+    },
+    "fast": {
+        "groq":       "llama-3.1-8b-instant",
+        "cerebras":   "llama3.1-8b",
+        "openrouter": "google/gemma-3-12b-it:free",
+        "mistral":    "mistral-small-latest",
+    },
+}
+
+# ── Task-specific provider priority ──
+# Reorder the fallback chain based on which providers are best for each task.
+_TASK_PRIORITY = {
+    "arabic":  ["cerebras", "groq", "openrouter", "mistral"],  # Cerebras Qwen is best for Arabic
+    "code":    ["groq", "cerebras", "openrouter", "mistral"],   # Groq Llama 70B is great for code
+    "fast":    ["cerebras", "groq", "openrouter", "mistral"],   # Cerebras is fastest
+    "default": ["groq", "cerebras", "openrouter", "mistral"],
+}
+
+_CHAIN_CFG = {
+    "groq":       {"key_env": "GROQ_API_KEY",       "timeout": 30, "extra": {}},
+    "cerebras":   {"key_env": "CEREBRAS_API_KEY",   "timeout": 30, "extra": {}},
+    "openrouter": {"key_env": "OPENROUTER_API_KEY", "timeout": 45,
+                   "extra": {"HTTP-Referer": "https://github.com/Moealsarraj", "X-Title": "AI Tools"}},
+    "mistral":    {"key_env": "MISTRAL_API_KEY",    "timeout": 40, "extra": {}},
+}
+
+# Build available providers (those with valid keys)
+_AVAILABLE = {}
+for _name, _cfg in _CHAIN_CFG.items():
+    _k = os.environ.get(_cfg["key_env"], "")
     if _k:
-        _PROVIDERS.append({
-            "name":    _p["name"],
-            "url":     _PROVIDER_URLS[_p["name"]],
-            "model":   _FREE_MODELS[_p["name"]],
+        _AVAILABLE[_name] = {
+            "name":    _name,
+            "url":     _PROVIDER_URLS[_name],
             "key":     _k,
-            "timeout": _p["timeout"],
-            "extra":   _p["extra"],
-        })
+            "timeout": _cfg["timeout"],
+            "extra":   _cfg["extra"],
+        }
 
 # Ollama fallback
 _OLLAMA_PROVIDER = None
@@ -57,7 +102,7 @@ try:
 except Exception:
     pass
 
-_AI_AVAILABLE = bool(_PROVIDERS or _OLLAMA_PROVIDER)
+_AI_AVAILABLE = bool(_AVAILABLE or _OLLAMA_PROVIDER)
 
 _RE_THINK = re.compile(r"<think>.*?</think>", re.DOTALL)
 _RE_OPEN  = re.compile(r"^```[a-z]*\n?", re.MULTILINE)
@@ -77,8 +122,28 @@ def _post_openai(url, key, model, messages, max_tokens, extra_headers, timeout=6
     r.raise_for_status()
     return _clean(r.json()["choices"][0]["message"]["content"])
 
+
+def _build_chain(task_hint: str) -> list[dict]:
+    """Build an ordered provider chain for the given task hint."""
+    hint = task_hint if task_hint in _TASK_PRIORITY else "default"
+    priority = _TASK_PRIORITY[hint]
+    models = _TASK_MODELS.get(hint, _FREE_MODELS)
+
+    chain = []
+    for name in priority:
+        if name in _AVAILABLE:
+            prov = _AVAILABLE[name].copy()
+            prov["model"] = models.get(name, _FREE_MODELS.get(name, ""))
+            chain.append(prov)
+    return chain
+
+
 def call_ai(messages: list, system: str = "", max_tokens: int = 2048,
-            api_key_row: dict | None = None) -> str:
+            api_key_row: dict | None = None, task_hint: str = "default") -> str:
+    """Call AI with smart task-based routing.
+
+    task_hint: "arabic" | "code" | "fast" | "default"
+    """
     if system:
         messages = [{"role": "system", "content": system}] + messages
     # Custom API key path (used by e.g. Wasit/Amin integrations)
@@ -101,16 +166,21 @@ def call_ai(messages: list, system: str = "", max_tokens: int = 2048,
     if not _AI_AVAILABLE:
         raise RuntimeError("No AI provider. Set GROQ_API_KEY or similar in .env")
     # Ollama-only path
-    if not _PROVIDERS and _OLLAMA_PROVIDER:
+    if not _AVAILABLE and _OLLAMA_PROVIDER:
         r = requests.post(f"{_OLLAMA_BASE}/api/chat",
             json={"model": _OLLAMA_PROVIDER["model"], "messages": messages, "stream": False},
             timeout=120)
         r.raise_for_status()
         return _clean(r.json()["message"]["content"])
-    # Runtime chain: try each provider, fall back on 429 or transient errors
+    # Smart task-routed chain
+    chain = _build_chain(task_hint)
+    if not chain:
+        chain = _build_chain("default")
+
     last_exc = None
-    for prov in _PROVIDERS:
+    for prov in chain:
         try:
+            logger.debug("Trying %s/%s for task=%s", prov["name"], prov["model"], task_hint)
             return _post_openai(
                 prov["url"], prov["key"], prov["model"],
                 messages, max_tokens, prov["extra"], prov["timeout"]
@@ -214,6 +284,7 @@ def _extract_json(raw: str):
     raise ValueError(f"AI returned non-JSON: {raw[:200]}")
 
 def call_ai_json(messages: list, system: str = "", max_tokens: int = 2048,
-                 api_key_row: dict | None = None) -> dict | list:
-    raw = call_ai(messages, system=system, max_tokens=max_tokens, api_key_row=api_key_row)
+                 api_key_row: dict | None = None, task_hint: str = "default") -> dict | list:
+    raw = call_ai(messages, system=system, max_tokens=max_tokens,
+                  api_key_row=api_key_row, task_hint=task_hint)
     return _extract_json(raw)
