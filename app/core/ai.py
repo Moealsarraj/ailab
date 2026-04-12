@@ -18,6 +18,9 @@ _PROVIDER_URLS = {
     "openrouter": "https://openrouter.ai/api/v1/chat/completions",
     "mistral":    "https://api.mistral.ai/v1/chat/completions",
     "openai":     "https://api.openai.com/v1/chat/completions",
+    "deepseek":   "https://api.deepseek.com/chat/completions",
+    "together":   "https://api.together.xyz/v1/chat/completions",
+    "cohere":     "https://api.cohere.com/v2/chat",
 }
 
 # ── Model tiers per provider ──
@@ -26,6 +29,9 @@ _FREE_MODELS = {
     "cerebras":   "llama3.1-8b",
     "openrouter": "google/gemma-3-12b-it:free",
     "mistral":    "mistral-small-latest",
+    "deepseek":   "deepseek-chat",
+    "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    "cohere":     "command-r",
 }
 _PREMIUM_MODELS = {
     "groq":       "llama-3.3-70b-versatile",
@@ -33,6 +39,9 @@ _PREMIUM_MODELS = {
     "openrouter": "google/gemma-3-27b-it:free",
     "mistral":    "mistral-medium-latest",
     "openai":     "gpt-4o-mini",
+    "deepseek":   "deepseek-chat",
+    "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    "cohere":     "command-r-plus",
 }
 
 # ── Task-specific model routing ──
@@ -46,28 +55,36 @@ _TASK_MODELS = {
         "cerebras":   "qwen-3-235b-a22b-instruct-2507",
         "openrouter": "google/gemma-3-27b-it:free",
         "mistral":    "mistral-medium-latest",
+        "deepseek":   "deepseek-chat",
+        "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+        "cohere":     "command-r-plus",
     },
     "code": {
         "groq":       "llama-3.3-70b-versatile",
         "cerebras":   "qwen-3-235b-a22b-instruct-2507",
         "openrouter": "google/gemma-3-27b-it:free",
         "mistral":    "mistral-medium-latest",
+        "deepseek":   "deepseek-chat",
+        "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+        "cohere":     "command-r-plus",
     },
     "fast": {
         "groq":       "llama-3.1-8b-instant",
         "cerebras":   "llama3.1-8b",
         "openrouter": "google/gemma-3-12b-it:free",
         "mistral":    "mistral-small-latest",
+        "deepseek":   "deepseek-chat",
+        "together":   "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+        "cohere":     "command-r",
     },
 }
 
 # ── Task-specific provider priority ──
-# Reorder the fallback chain based on which providers are best for each task.
 _TASK_PRIORITY = {
-    "arabic":  ["cerebras", "groq", "openrouter", "mistral"],  # Cerebras Qwen is best for Arabic
-    "code":    ["groq", "cerebras", "openrouter", "mistral"],   # Groq Llama 70B is great for code
-    "fast":    ["cerebras", "groq", "openrouter", "mistral"],   # Cerebras is fastest
-    "default": ["groq", "cerebras", "openrouter", "mistral"],
+    "arabic":  ["cerebras", "deepseek", "groq", "together", "openrouter", "cohere", "mistral"],
+    "code":    ["deepseek", "groq", "cerebras", "together", "openrouter", "cohere", "mistral"],
+    "fast":    ["cerebras", "groq", "together", "deepseek", "openrouter", "cohere", "mistral"],
+    "default": ["groq", "cerebras", "deepseek", "together", "openrouter", "cohere", "mistral"],
 }
 
 _CHAIN_CFG = {
@@ -76,6 +93,9 @@ _CHAIN_CFG = {
     "openrouter": {"key_env": "OPENROUTER_API_KEY", "timeout": 45,
                    "extra": {"HTTP-Referer": "https://github.com/Moealsarraj", "X-Title": "AI Tools"}},
     "mistral":    {"key_env": "MISTRAL_API_KEY",    "timeout": 40, "extra": {}},
+    "deepseek":   {"key_env": "DEEPSEEK_API_KEY",   "timeout": 60, "extra": {}},
+    "together":   {"key_env": "TOGETHER_API_KEY",   "timeout": 45, "extra": {}},
+    "cohere":     {"key_env": "COHERE_API_KEY",     "timeout": 45, "extra": {}},
 }
 
 # Build available providers (those with valid keys)
@@ -102,7 +122,54 @@ try:
 except Exception:
     pass
 
+# ── Google Gemini (special API format) ──
+_GEMINI_KEY = os.environ.get("GEMINI_API_KEY", "")
+if _GEMINI_KEY:
+    _AVAILABLE["gemini"] = {
+        "name": "gemini",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models",
+        "key": _GEMINI_KEY,
+        "timeout": 60,
+        "extra": {},
+    }
+    _FREE_MODELS["gemini"] = "gemini-2.0-flash"
+    _PREMIUM_MODELS["gemini"] = "gemini-2.0-flash"
+    for task in _TASK_MODELS:
+        _TASK_MODELS[task]["gemini"] = "gemini-2.0-flash"
+    for task in _TASK_PRIORITY:
+        if "gemini" not in _TASK_PRIORITY[task]:
+            _TASK_PRIORITY[task].insert(2, "gemini")
+
 _AI_AVAILABLE = bool(_AVAILABLE or _OLLAMA_PROVIDER)
+
+
+def _post_gemini(key: str, model: str, messages: list, max_tokens: int, timeout: int = 60) -> str:
+    """Call Google Gemini API (non-OpenAI format)."""
+    # Convert OpenAI message format to Gemini format
+    contents = []
+    system_text = ""
+    for msg in messages:
+        role = msg["role"]
+        if role == "system":
+            system_text = msg["content"]
+            continue
+        contents.append({
+            "role": "user" if role == "user" else "model",
+            "parts": [{"text": msg["content"]}],
+        })
+
+    body = {
+        "contents": contents,
+        "generationConfig": {"maxOutputTokens": max_tokens},
+    }
+    if system_text:
+        body["systemInstruction"] = {"parts": [{"text": system_text}]}
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+    r = requests.post(url, json=body, timeout=timeout)
+    r.raise_for_status()
+    data = r.json()
+    return _clean(data["candidates"][0]["content"]["parts"][0]["text"])
 
 
 def get_available_providers() -> list[dict]:
@@ -127,6 +194,8 @@ def call_ai_single(provider_name: str, messages: list, system: str = "",
     model = models.get(provider_name, prov.get("model", ""))
     if system:
         messages = [{"role": "system", "content": system}] + messages
+    if provider_name == "gemini":
+        return _post_gemini(prov["key"], model, messages, max_tokens, prov["timeout"])
     return _post_openai(
         prov["url"], prov["key"], model,
         messages, max_tokens, prov["extra"], prov["timeout"]
@@ -210,6 +279,8 @@ def call_ai(messages: list, system: str = "", max_tokens: int = 2048,
     for prov in chain:
         try:
             logger.debug("Trying %s/%s for task=%s", prov["name"], prov["model"], task_hint)
+            if prov["name"] == "gemini":
+                return _post_gemini(prov["key"], prov["model"], messages, max_tokens, prov["timeout"])
             return _post_openai(
                 prov["url"], prov["key"], prov["model"],
                 messages, max_tokens, prov["extra"], prov["timeout"]
