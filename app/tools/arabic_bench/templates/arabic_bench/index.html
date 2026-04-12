@@ -97,6 +97,7 @@
             <span class="material-symbols-outlined text-5xl text-outline mb-4" style="font-variation-settings:'FILL' 1;">analytics</span>
             <p class="text-sm font-medium">Paste both texts and run the evaluation</p>
             <p class="text-xs text-outline mt-1">Scores and critique will appear here</p>
+            <button onclick="loadExample()" class="mt-3 text-xs font-medium hover:underline transition-colors" style="color:#6366f1; font-size:12px;">See example &#8599;</button>
           </div>
 
           <!-- Loading State -->
@@ -109,6 +110,12 @@
           <div id="error-state" class="hidden flex flex-col items-center justify-center py-16 text-center">
             <span class="material-symbols-outlined text-error text-4xl mb-3">error</span>
             <p id="error-msg" class="text-sm text-error font-medium px-8"></p>
+          </div>
+
+          <!-- Clear Example Banner -->
+          <div id="example-banner" class="hidden flex items-center justify-between px-4 py-2 rounded-lg" style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15);">
+            <span class="text-xs font-medium" style="color:#6366f1;">Viewing example output</span>
+            <button onclick="clearExample()" class="text-xs font-medium hover:underline" style="color:#6366f1;">Clear example</button>
           </div>
 
           <!-- Results -->
@@ -335,6 +342,30 @@
     critiqueCard.classList.add('hidden');
   }
   window.loadDemo = loadDemo;
+
+  function loadExample() {
+    const exampleData = {
+      total_score: 82,
+      verdict: 'Good',
+      correctness: 90,
+      grammar: 85,
+      fluency: 80,
+      hallucination_risk: 25,
+      critique: 'الاستجابة تُظهر فهماً جيداً للموضوع وتغطي النقاط الرئيسية بشكل ملائم. المعلومات المقدمة دقيقة في معظمها مع بعض التبسيط الذي لا يؤثر على صحة المحتوى العام.\n\nمن حيث القواعد النحوية، النص سليم بشكل عام مع استخدام صحيح لعلامات الإعراب في أغلب المواضع. لوحظ بعض التكرار في الصياغة يمكن تحسينه لرفع مستوى الطلاقة.\n\nخطر الهلوسة منخفض نسبياً — لم تُذكر معلومات مختلقة، لكن هناك بعض التعميمات التي كان من الأفضل دعمها بأمثلة محددة. بشكل عام، الاستجابة تستحق تقييماً جيداً مع إمكانية التحسين في دقة التفاصيل وتنوع الأسلوب.'
+    };
+    renderResults(exampleData);
+    showState('results');
+    document.getElementById('example-banner').classList.remove('hidden');
+  }
+
+  function clearExample() {
+    document.getElementById('example-banner').classList.add('hidden');
+    critiqueCard.classList.add('hidden');
+    showState('empty');
+  }
+
+  window.loadExample = loadExample;
+  window.clearExample = clearExample;
 })();
 </script>
 {% endblock %}
